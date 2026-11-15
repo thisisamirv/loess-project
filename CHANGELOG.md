@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Breaking change: `OnlineLoess.add_point` / `add_point_vector` returns `{ status, point }` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | null`.
 - Bumped `astrojs/markdown-remark` to v7.3.9, `astrojs/starlight` to v0.43.1, `napi-rs/cli` to v3.10.12, `astro` to v7.4.12, `katex` to v0.19.1, `oxlint` to v1.93.0, and `typedoc-plugin-markdown` to v4.14.1.
 
 **Python:**
@@ -84,6 +85,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Distinguish online `missing="drop"` (`:dropped` / `has_value = -1`) from a still-filling window (`nothing` / `has_value = 0`).
 - Reject `append!` of results that carry fit-global state (`cv_scores`, `diagnostics`, `predict_model`, hat summaries).
 - Demote library-discovery `@info` logs to `@debug`.
+
+**Node.js:**
+
+- Distinguish online `missing="drop"` (`status: "dropped"`) from a still-filling window (`status: "filling"`); `add_point` / `add_point_vector` return `{ status, point }`.
+- Add idempotent `close()` (and `Symbol.dispose`) on `OnlineLoess`, `StreamingLoess`, and `LoessResult` (clears retained predict state).
+- Align `fit_async` custom-weights with sync `fit`, and categorize Online errors via `map_loess_result`.
 
 ## 3.0.0
 

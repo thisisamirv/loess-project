@@ -252,6 +252,12 @@ impl LoessResult {
         self.inner.dimensions as u32
     }
 
+    /// Drop retained predict state early. Idempotent; GC still finalizes the rest.
+    #[napi]
+    pub fn close(&mut self) {
+        self.inner.predict_state = None;
+    }
+
     /// Evaluate the fitted model at out-of-sample query points not in the training set.
     ///
     /// Requires `retain_model: true` to have been set on the builder before `fit()`.
@@ -580,9 +586,18 @@ pub struct OnlineSmoothOptions {
     /// Reduce polynomial degree to linear at boundary vertices (default true).
     #[napi(js_name = "boundary_degree_fallback")]
     pub boundary_degree_fallback: Option<bool>,
-    /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error".
+    /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to `add_point` ("error", "drop"). Default: "error".
     #[napi(js_name = "missing")]
     pub missing: Option<String>,
+}
+
+/// Result of [`OnlineLoess::add_point`] / [`OnlineLoess::add_point_vector`].
+#[napi(object)]
+pub struct AddPointResult {
+    /// `"filling"`, `"ready"`, or `"dropped"`.
+    pub status: String,
+    /// Smoothed output when `status` is `"ready"`; otherwise `null`.
+    pub point: Option<OnlineOutput>,
 }
 
 /// Build a LoessBuilder from Batch options, applying every field.
@@ -804,17 +819,16 @@ impl Loess {
         y: Float64Array,
         custom_weights: Option<Float64Array>,
     ) -> Result<AsyncTask<LoessTask>> {
-        let mut builder = self.create_builder()?;
-        if let Some(cw) = custom_weights {
-            builder = builder.custom_weights(cw.as_ref().to_vec());
-        }
+        let builder = self.create_builder()?;
         let x_vec = x.as_ref().to_vec();
         let y_vec = y.as_ref().to_vec();
+        let custom_weights = custom_weights.map(|cw| cw.as_ref().to_vec());
 
         Ok(AsyncTask::new(LoessTask {
             builder,
             x: x_vec,
             y: y_vec,
+            custom_weights,
         }))
     }
 
@@ -827,6 +841,7 @@ pub struct LoessTask {
     builder: LoessBuilder<f64>,
     x: Vec<f64>,
     y: Vec<f64>,
+    custom_weights: Option<Vec<f64>>,
 }
 
 impl Task for LoessTask {
@@ -834,7 +849,10 @@ impl Task for LoessTask {
     type JsValue = LoessResult;
 
     fn compute(&mut self) -> Result<Self::Output> {
-        let model = map_runtime(shared_parse::build_batch(self.builder.clone(), None))?;
+        let model = map_runtime(shared_parse::build_batch(
+            self.builder.clone(),
+            self.custom_weights.clone(),
+        ))?;
         map_runtime(model.fit(&self.x, &self.y))
     }
 
@@ -859,7 +877,7 @@ pub struct StreamingOptions {
 /// Streaming LOESS smoother for large datasets.
 #[napi]
 pub struct StreamingLoess {
-    inner: ParallelStreamingLoess<f64>,
+    inner: Option<ParallelStreamingLoess<f64>>,
 }
 
 #[napi]
@@ -888,14 +906,23 @@ impl StreamingLoess {
             merge_strategy.as_deref(),
         ))?;
 
-        Ok(StreamingLoess { inner: model })
+        Ok(StreamingLoess { inner: Some(model) })
+    }
+
+    fn model_mut(&mut self) -> Result<&mut ParallelStreamingLoess<f64>> {
+        self.inner.as_mut().ok_or_else(|| {
+            Error::new(
+                Status::GenericFailure,
+                "StreamingLoess has already been closed",
+            )
+        })
     }
 
     /// Process a chunk of data.
     #[napi(js_name = "process_chunk")]
     pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResult> {
         let result: InnerLoessResult<f64> =
-            map_runtime(self.inner.process_chunk(x.as_ref(), y.as_ref()))?;
+            map_runtime(self.model_mut()?.process_chunk(x.as_ref(), y.as_ref()))?;
         Ok(LoessResult { inner: result })
     }
 
@@ -907,7 +934,7 @@ impl StreamingLoess {
         y: Float64Array,
         custom_weights: Float64Array,
     ) -> Result<LoessResult> {
-        let result: InnerLoessResult<f64> = map_runtime(self.inner.process_chunk_weighted(
+        let result: InnerLoessResult<f64> = map_runtime(self.model_mut()?.process_chunk_weighted(
             x.as_ref(),
             y.as_ref(),
             custom_weights.as_ref(),
@@ -918,8 +945,14 @@ impl StreamingLoess {
     /// Finalize the stream and return remaining data.
     #[napi]
     pub fn finalize(&mut self) -> Result<LoessResult> {
-        let result: InnerLoessResult<f64> = map_runtime(self.inner.finalize())?;
+        let result: InnerLoessResult<f64> = map_runtime(self.model_mut()?.finalize())?;
         Ok(LoessResult { inner: result })
+    }
+
+    /// Release native streaming state early. Idempotent.
+    #[napi]
+    pub fn close(&mut self) {
+        self.inner.take();
     }
 }
 
@@ -940,7 +973,7 @@ pub struct OnlineOptions {
 /// Online LOESS smoother for real-time data.
 #[napi]
 pub struct OnlineLoess {
-    inner: ParallelOnlineLoess<f64>,
+    inner: Option<ParallelOnlineLoess<f64>>,
 }
 
 #[napi]
@@ -969,66 +1002,119 @@ impl OnlineLoess {
             update_mode.as_deref(),
         ))?;
 
-        Ok(OnlineLoess { inner: model })
+        Ok(OnlineLoess { inner: Some(model) })
     }
 
-    /// Add a single point and get the smoothed value if enough points are available.
+    fn model_mut(&mut self) -> Result<&mut ParallelOnlineLoess<f64>> {
+        self.inner.as_mut().ok_or_else(|| {
+            Error::new(
+                Status::GenericFailure,
+                "OnlineLoess has already been closed",
+            )
+        })
+    }
+
+    fn model(&self) -> Result<&ParallelOnlineLoess<f64>> {
+        self.inner.as_ref().ok_or_else(|| {
+            Error::new(
+                Status::GenericFailure,
+                "OnlineLoess has already been closed",
+            )
+        })
+    }
+
+    /// Add a single point.
+    ///
+    /// Returns status `"filling"` while fewer than `min_points` finite
+    /// observations have been accepted, `"ready"` once smoothing begins
+    /// (`point` holds the output), or `"dropped"` when `missing = "drop"`
+    /// ignores a non-finite `x` or `y`. Weight is not part of drop detection.
     #[napi(js_name = "add_point")]
-    pub fn add_point(
-        &mut self,
-        x: f64,
-        y: f64,
-        weight: Option<f64>,
-    ) -> Result<Option<OnlineOutput>> {
-        let output = self
-            .inner
-            .add_point_weighted(&[x], y, weight.unwrap_or(1.0))
-            .map_err(|e| to_napi_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
-        Ok(output.map(|o| OnlineOutput {
-            y: o.y,
-            standard_error: o.standard_error,
-            residual: o.residual,
-            robustness_weight: o.robustness_weight,
-            iterations_used: o.iterations_used.map(|i| i as u32),
-            confidence_lower: o.confidence_lower,
-            confidence_upper: o.confidence_upper,
-            prediction_lower: o.prediction_lower,
-            prediction_upper: o.prediction_upper,
-            gradient: o.gradient,
-        }))
+    pub fn add_point(&mut self, x: f64, y: f64, weight: Option<f64>) -> Result<AddPointResult> {
+        let dropped_candidate = !(x.is_finite() && y.is_finite());
+        let output = shared_parse::map_loess_result(self.model_mut()?.add_point_weighted(
+            &[x],
+            y,
+            weight.unwrap_or(1.0),
+        ))
+        .map_err(to_napi_error)?;
+        Ok(match output {
+            Some(o) => AddPointResult {
+                status: "ready".to_string(),
+                point: Some(OnlineOutput {
+                    y: o.y,
+                    standard_error: o.standard_error,
+                    residual: o.residual,
+                    robustness_weight: o.robustness_weight,
+                    iterations_used: o.iterations_used.map(|i| i as u32),
+                    confidence_lower: o.confidence_lower,
+                    confidence_upper: o.confidence_upper,
+                    prediction_lower: o.prediction_lower,
+                    prediction_upper: o.prediction_upper,
+                    gradient: o.gradient,
+                }),
+            },
+            None if dropped_candidate => AddPointResult {
+                status: "dropped".to_string(),
+                point: None,
+            },
+            None => AddPointResult {
+                status: "filling".to_string(),
+                point: None,
+            },
+        })
     }
 
     /// Add a point with one coordinate per configured predictor dimension.
+    ///
+    /// Same ternary `{ status, point }` contract as [`OnlineLoess::add_point`].
+    /// Drop detection uses only `x` coordinates and `y` (weight excluded).
     #[napi(js_name = "add_point_vector")]
     pub fn add_point_vector(
         &mut self,
         x: Float64Array,
         y: f64,
         weight: Option<f64>,
-    ) -> Result<Option<OnlineOutput>> {
+    ) -> Result<AddPointResult> {
         let x = x.as_ref().to_vec();
-        let output = self
-            .inner
-            .add_point_weighted(&x, y, weight.unwrap_or(1.0))
-            .map_err(|e| to_napi_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
-        Ok(output.map(|o| OnlineOutput {
-            y: o.y,
-            standard_error: o.standard_error,
-            residual: o.residual,
-            robustness_weight: o.robustness_weight,
-            iterations_used: o.iterations_used.map(|i| i as u32),
-            confidence_lower: o.confidence_lower,
-            confidence_upper: o.confidence_upper,
-            prediction_lower: o.prediction_lower,
-            prediction_upper: o.prediction_upper,
-            gradient: o.gradient,
-        }))
+        let dropped_candidate = x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
+        let output = shared_parse::map_loess_result(self.model_mut()?.add_point_weighted(
+            &x,
+            y,
+            weight.unwrap_or(1.0),
+        ))
+        .map_err(to_napi_error)?;
+        Ok(match output {
+            Some(o) => AddPointResult {
+                status: "ready".to_string(),
+                point: Some(OnlineOutput {
+                    y: o.y,
+                    standard_error: o.standard_error,
+                    residual: o.residual,
+                    robustness_weight: o.robustness_weight,
+                    iterations_used: o.iterations_used.map(|i| i as u32),
+                    confidence_lower: o.confidence_lower,
+                    confidence_upper: o.confidence_upper,
+                    prediction_lower: o.prediction_lower,
+                    prediction_upper: o.prediction_upper,
+                    gradient: o.gradient,
+                }),
+            },
+            None if dropped_candidate => AddPointResult {
+                status: "dropped".to_string(),
+                point: None,
+            },
+            None => AddPointResult {
+                status: "filling".to_string(),
+                point: None,
+            },
+        })
     }
 
     /// Compute diagnostics for the current sliding window on demand.
     #[napi(js_name = "window_diagnostics")]
     pub fn window_diagnostics(&self) -> Result<Option<Diagnostics>> {
-        self.inner
+        self.model()?
             .window_diagnostics()
             .map_err(|e| to_napi_error(shared_parse::BindingError::runtime(e.to_string())))
             .map(|result| {
@@ -1082,7 +1168,13 @@ impl OnlineLoess {
             builder = builder.max_neighbor_distance(distance);
         }
         let query = map_invalid_arg(builder.build())?;
-        let output = map_invalid_arg(self.inner.predict_window(new_x.as_ref(), &query))?;
+        let output = map_invalid_arg(self.model()?.predict_window(new_x.as_ref(), &query))?;
         Ok(PredictOutput { inner: output })
+    }
+
+    /// Release native online state early. Idempotent.
+    #[napi]
+    pub fn close(&mut self) {
+        self.inner.take();
     }
 }

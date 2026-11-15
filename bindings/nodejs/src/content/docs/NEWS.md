@@ -6,6 +6,18 @@ title: Changelog
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+* Breaking change: `OnlineLoess.add_point` / `add_point_vector` returns `{ status, point }` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | null`.
+
+### Fixed
+
+* Distinguishing Online `add_point` filling vs `missing="drop"` via ternary `status`.
+* Adding idempotent `close()` (and `Symbol.dispose`) on `OnlineLoess`, `StreamingLoess`, and `LoessResult` (clears retained predict state).
+* Aligning `fit_async` custom-weights with sync `fit`, and categorizing Online errors via `map_loess_result`.
+
 ## 3.0.0
 
 ### Added

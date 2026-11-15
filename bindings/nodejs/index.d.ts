@@ -63,6 +63,8 @@ export declare class LoessResult {
   get leverage(): Float64Array | null
   /** Get number of predictor dimensions. */
   get dimensions(): number
+  /** Drop retained predict state early. Idempotent; GC still finalizes the rest. */
+  close(): void
   /**
    * Evaluate the fitted model at out-of-sample query points not in the training set.
    *
@@ -75,14 +77,28 @@ export declare class LoessResult {
 export declare class OnlineLoess {
   /** Create a new online LOESS smoother. */
   constructor(options?: OnlineSmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
-  /** Add a single point and get the smoothed value if enough points are available. */
-  add_point(x: number, y: number, weight?: number | undefined | null): OnlineOutput | null
-  /** Add a point with one coordinate per configured predictor dimension. */
-  add_point_vector(x: Float64Array, y: number, weight?: number | undefined | null): OnlineOutput | null
+  /**
+   * Add a single point.
+   *
+   * Returns status `"filling"` while fewer than `min_points` finite
+   * observations have been accepted, `"ready"` once smoothing begins
+   * (`point` holds the output), or `"dropped"` when `missing = "drop"`
+   * ignores a non-finite `x` or `y`. Weight is not part of drop detection.
+   */
+  add_point(x: number, y: number, weight?: number | undefined | null): AddPointResult
+  /**
+   * Add a point with one coordinate per configured predictor dimension.
+   *
+   * Same ternary `{ status, point }` contract as `add_point`.
+   * Drop detection uses only `x` coordinates and `y` (weight excluded).
+   */
+  add_point_vector(x: Float64Array, y: number, weight?: number | undefined | null): AddPointResult
   /** Compute diagnostics for the current sliding window on demand. */
   window_diagnostics(): Diagnostics | null
   /** Predict query points using a fitted model of the current sliding window. */
   predict_window(newX: Float64Array, options?: PredictOptions | undefined | null): PredictOutput
+  /** Release native online state early. Idempotent. */
+  close(): void
 }
 
 /** Result of `LoessResult.predict()`. */
@@ -113,6 +129,16 @@ export declare class StreamingLoess {
   process_chunk_weighted(x: Float64Array, y: Float64Array, customWeights: Float64Array): LoessResult
   /** Finalize the stream and return remaining data. */
   finalize(): LoessResult
+  /** Release native streaming state early. Idempotent. */
+  close(): void
+}
+
+/** Result of `OnlineLoess.add_point` / `add_point_vector`. */
+export interface AddPointResult {
+  /** `"filling"`, `"ready"`, or `"dropped"`. */
+  status: 'filling' | 'ready' | 'dropped'
+  /** Smoothed output when `status` is `"ready"`; otherwise `null`. */
+  point?: OnlineOutput
 }
 
 export interface CvOptions {
@@ -226,7 +252,7 @@ export interface OnlineSmoothOptions {
   interpolation_vertices?: number
   /** Reduce polynomial degree to linear at boundary vertices (default true). */
   boundary_degree_fallback?: boolean
-  /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error". */
+  /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `add_point` ("error", "drop"). Default: "error". */
   missing?: string
 }
 

@@ -98,8 +98,8 @@ test('online smoothing', () => {
     for (let i = 0; i < 10; i++) {
         const res = online.add_point(i, i * 2);
 
-        if (res !== null) {
-            lastVal = res.y;
+        if (res.status === 'ready') {
+            lastVal = res.point.y;
         }
     }
 
@@ -126,7 +126,10 @@ test('online multivariate smoothing accepts coordinate arrays', () => {
         [[0, 1], 2],
         [[1, 1], 3]
     ]) {
-        latest = online.add_point_vector(new Float64Array(x), y);
+        const res = online.add_point_vector(new Float64Array(x), y);
+        if (res.status === 'ready') {
+            latest = res.point;
+        }
     }
 
     assert.ok(latest !== null);
@@ -247,8 +250,8 @@ test('OnlineLoess: confidence/prediction intervals under update_mode "full"', ()
     let last = null;
     for (let i = 0; i < 6; i++) {
         const res = online.add_point(i, 2 * i + 1);
-        if (res !== null) {
-            last = res;
+        if (res.status === 'ready') {
+            last = res.point;
         }
     }
 
@@ -373,7 +376,10 @@ test('grouped outputs select Batch, Streaming, Online, and prediction fields', (
     }, { window_capacity: 10, min_points: 3, update_mode: 'full' });
     let latest = null;
     for (let index = 0; index < x.length; index++) {
-        latest = online.add_point(x[index], y[index]);
+        const res = online.add_point(x[index], y[index]);
+        if (res.status === 'ready') {
+            latest = res.point;
+        }
     }
     assert.ok(latest.robustness_weight !== null);
     assert.ok(latest.gradient !== null);
@@ -592,7 +598,7 @@ test('OnlineOptions: update_mode', () => {
         let hasResult = false;
         for (let i = 0; i < x.length; i++) {
             const r = o.add_point(x[i], y[i]);
-            if (r !== null) hasResult = true;
+            if (r.status === 'ready') hasResult = true;
         }
         assert.ok(hasResult);
     }
@@ -628,13 +634,25 @@ test('StreamingOptions: missing = "drop" removes non-finite rows', () => {
     assert.strictEqual(result.y.length + finalResult.y.length, 9);
 });
 
-test('OnlineOptions: missing = "drop" ignores non-finite point', () => {
-    const online = new fastloess.OnlineLoess(
-        { fraction: 0.5, missing: 'drop' },
-        { window_capacity: 10 }
-    );
-    const r = online.add_point(1.0, NaN);
-    assert.strictEqual(r, null);
+test('online missing: "drop" reports dropped distinct from filling', () => {
+    const online = new fastloess.OnlineLoess({
+        fraction: 0.5,
+        missing: 'drop'
+    }, {
+        window_capacity: 10,
+        min_points: 5
+    });
+
+    const filling = online.add_point(0, 0);
+    assert.strictEqual(filling.status, 'filling');
+    assert.strictEqual(filling.point, null);
+
+    const dropped = online.add_point(1, NaN);
+    assert.strictEqual(dropped.status, 'dropped');
+    assert.strictEqual(dropped.point, null);
+
+    const stillFilling = online.add_point(2, 4);
+    assert.strictEqual(stillFilling.status, 'filling');
 });
 
 test('SmoothOptions: invalid missing policy throws', () => {

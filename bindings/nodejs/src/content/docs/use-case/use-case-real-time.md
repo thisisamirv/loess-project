@@ -14,7 +14,7 @@ When data arrives continuously—from sensors, logs, or streaming pipelines—yo
 
 For true real-time applications where each point must be processed immediately.
 
-`window_capacity = 25` limits the internal buffer to the 25 most recent observations; each `add_point` call costs O(window) rather than growing with total history. `min_points = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return `null`/`None`/`nothing`. `update_mode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
+`window_capacity = 25` limits the internal buffer to the 25 most recent observations; each `add_point` call costs O(window) rather than growing with total history. `min_points = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return `status: "filling"`. `update_mode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
 
 ### Sensor Data Example
 
@@ -32,8 +32,8 @@ for (let i = 0; i < 100; i++) {
     const y = 20 + 5 * Math.sin(x / 10) + ((i * 7 + 3) % 17) / 17;
     
     const res = processor.add_point(x, y);
-    if (res !== null && x % 20 === 0) {
-        console.log(`Time ${x}: smoothed = ${res.y.toFixed(2)}`);
+    if (res.status === "ready" && x % 20 === 0) {
+        console.log(`Time ${x}: smoothed = ${res.point.y.toFixed(2)}`);
     }
 }
 ```

@@ -162,8 +162,8 @@ const online = new OnlineLoess(
 let shown = 0;
 for (let i = 0; i < x.length; i++) {
     const result = online.add_point(x[i], y[i]);
-    if (result !== null && shown < 5) {
-        console.log(result.y);
+    if (result.status === "ready" && shown < 5) {
+        console.log(result.point.y);
         shown++;
     }
 }
