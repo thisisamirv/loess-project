@@ -121,7 +121,7 @@ function find_library()
     # Option 1: Check environment variable (PRIORITY)
     if haskey(ENV, "FASTLOESS_LIB")
         lib = ENV["FASTLOESS_LIB"]
-        @info "Using library from FASTLOESS_LIB: $lib"
+        @debug "Using library from FASTLOESS_LIB: $lib"
         return lib
     end
 
@@ -130,7 +130,7 @@ function find_library()
         try
             if hasproperty(fastloess_jll, :libfastloess_jl)
                 lib = fastloess_jll.libfastloess_jl
-                @info "Using fastloess_jll library: $lib"
+                @debug "Using fastloess_jll library: $lib"
                 return lib
             end
         catch e
@@ -159,7 +159,7 @@ function find_library()
 
     for path ∈ candidates
         if isfile(path)
-            @info "Using local library: $path"
+            @debug "Using local library: $path"
             return path
         end
     end
@@ -209,7 +209,7 @@ end
 # C FFI result struct for predict() (must match Rust definition).
 struct CJlPredictResult
     y::Ptr{Cdouble}
-    n::Culong
+    n::Csize_t
     standard_errors::Ptr{Cdouble}
     confidence_lower::Ptr{Cdouble}
     confidence_upper::Ptr{Cdouble}
@@ -264,6 +264,7 @@ mutable struct PredictModel
                         (Ptr{Cvoid},),
                         x.handle,
                     )
+                    x.handle = C_NULL
                 end
             end,
             obj,
@@ -304,65 +305,60 @@ function predict(
         )
     end
 
-    c_result = GC.@preserve model new_x ccall(
-        (:jl_predict, libfastloess),
-        CJlPredictResult,
-        (
-            Ptr{Cvoid},
-            Ptr{Cdouble},
-            Culong,
-            Cint,
-            Cdouble,
-            Cdouble,
-            Cint,
-            Cstring,
-            Cdouble,
-            Cdouble,
+    c_result = Ref(
+        GC.@preserve model new_x ccall(
+            (:jl_predict, libfastloess),
+            CJlPredictResult,
+            (
+                Ptr{Cvoid},
+                Ptr{Cdouble},
+                Csize_t,
+                Cint,
+                Cdouble,
+                Cdouble,
+                Cint,
+                Cstring,
+                Cdouble,
+                Cdouble,
+            ),
+            model.handle,
+            pointer(new_x),
+            Csize_t(length(new_x)),
+            Cint(flags.se),
+            interval_options.confidence,
+            interval_options.prediction,
+            Cint(flags.gradient),
+            extrapolation,
+            (max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance),
+            (max_neighbor_distance === nothing ? NaN : max_neighbor_distance),
         ),
-        model.handle,
-        pointer(new_x),
-        Culong(length(new_x)),
-        Cint(flags.se),
-        interval_options.confidence,
-        interval_options.prediction,
-        Cint(flags.gradient),
-        extrapolation,
-        (max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance),
-        (max_neighbor_distance === nothing ? NaN : max_neighbor_distance),
     )
 
-    if c_result.error != C_NULL
-        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+    try
+        if c_result[].error != C_NULL
+            error_msg = unsafe_string(Ptr{UInt8}(c_result[].error))
+            error("fastloess error: $error_msg")
+        end
+
+        n = Int(c_result[].n)
+        dims = max(Int(c_result[].dimensions), 1)
+        return PredictResult(
+            ptr_to_vector(c_result[].y, n),
+            ptr_to_vector(c_result[].standard_errors, n),
+            ptr_to_vector(c_result[].confidence_lower, n),
+            ptr_to_vector(c_result[].confidence_upper, n),
+            ptr_to_vector(c_result[].prediction_lower, n),
+            ptr_to_vector(c_result[].prediction_upper, n),
+            ptr_to_vector(c_result[].derivative, n * dims),
+        )
+    finally
         ccall(
             (:jl_predict_free_result, libfastloess),
             Cvoid,
             (Ptr{CJlPredictResult},),
-            Ref(c_result),
+            c_result,
         )
-        error("fastloess error: $error_msg")
     end
-
-    n = Int(c_result.n)
-    dims = max(Int(c_result.dimensions), 1)
-
-    result = PredictResult(
-        ptr_to_vector(c_result.y, n),
-        ptr_to_vector(c_result.standard_errors, n),
-        ptr_to_vector(c_result.confidence_lower, n),
-        ptr_to_vector(c_result.confidence_upper, n),
-        ptr_to_vector(c_result.prediction_lower, n),
-        ptr_to_vector(c_result.prediction_upper, n),
-        ptr_to_vector(c_result.derivative, n * dims),
-    )
-
-    ccall(
-        (:jl_predict_free_result, libfastloess),
-        Cvoid,
-        (Ptr{CJlPredictResult},),
-        Ref(c_result),
-    )
-
-    return result
 end
 
 """
@@ -487,7 +483,7 @@ end
 struct CJlLoessResult
     x::Ptr{Cdouble}
     y::Ptr{Cdouble}
-    n::Culong
+    n::Csize_t
     standard_errors::Ptr{Cdouble}
     confidence_lower::Ptr{Cdouble}
     confidence_upper::Ptr{Cdouble}
@@ -513,7 +509,7 @@ struct CJlLoessResult
     leverage::Ptr{Cdouble}
     dimensions::Cint
     cv_scores::Ptr{Cdouble}
-    cv_scores_len::Culong
+    cv_scores_len::Csize_t
     predict_handle::Ptr{Cvoid}
     error::Ptr{Cchar}
 end
@@ -526,122 +522,111 @@ function ptr_to_vector(ptr::Ptr{Cdouble}, n::Int)
 end
 
 function convert_result(c_result::CJlLoessResult)
-    # Check for error
-    if c_result.error != C_NULL
-        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
-        # Free the result before throwing
+    r = Ref(c_result)
+    try
+        cr = r[]
+        if cr.error != C_NULL
+            error_msg = unsafe_string(Ptr{UInt8}(cr.error))
+            error("fastloess error: $error_msg")
+        end
+
+        n = Int(cr.n)
+
+        x = ptr_to_vector(cr.x, n)
+        y = ptr_to_vector(cr.y, n)
+        if x === nothing || y === nothing
+            error("fastloess error: result arrays are null")
+        end
+
+        x = x::Vector{Float64}
+        y = y::Vector{Float64}
+
+        standard_errors = ptr_to_vector(cr.standard_errors, n)
+        confidence_lower = ptr_to_vector(cr.confidence_lower, n)
+        confidence_upper = ptr_to_vector(cr.confidence_upper, n)
+        prediction_lower = ptr_to_vector(cr.prediction_lower, n)
+        prediction_upper = ptr_to_vector(cr.prediction_upper, n)
+        residuals = ptr_to_vector(cr.residuals, n)
+        robustness_weights = ptr_to_vector(cr.robustness_weights, n)
+
+        enp = isnan(cr.enp) ? nothing : cr.enp
+        trace_hat = isnan(cr.trace_hat) ? nothing : cr.trace_hat
+        delta1 = isnan(cr.delta1) ? nothing : cr.delta1
+        delta2 = isnan(cr.delta2) ? nothing : cr.delta2
+        residual_scale = isnan(cr.residual_scale) ? nothing : cr.residual_scale
+        leverage = ptr_to_vector(cr.leverage, n)
+        gradient = ptr_to_vector(cr.gradient, n * max(Int(cr.dimensions), 1))
+
+        diagnostics = if !isnan(cr.rmse)
+            Diagnostics(
+                cr.rmse,
+                cr.mae,
+                cr.r_squared,
+                isnan(cr.aic) ? nothing : cr.aic,
+                isnan(cr.aicc) ? nothing : cr.aicc,
+                isnan(cr.effective_df) ? nothing : cr.effective_df,
+                cr.residual_sd,
+            )
+        else
+            nothing
+        end
+
+        cv_scores = if cr.cv_scores != C_NULL && cr.cv_scores_len > 0
+            unsafe_wrap(Array, cr.cv_scores, Int(cr.cv_scores_len), own = false) |> copy
+        else
+            nothing
+        end
+
+        handle = ccall(
+            (:jl_loess_take_predict_handle, libfastloess),
+            Ptr{Cvoid},
+            (Ptr{CJlLoessResult},),
+            r,
+        )
+        predict_model = handle == C_NULL ? nothing : PredictModel(handle)
+
+        return LoessResult(
+            x,
+            y,
+            standard_errors,
+            confidence_lower,
+            confidence_upper,
+            prediction_lower,
+            prediction_upper,
+            residuals,
+            robustness_weights,
+            gradient,
+            cr.fraction_used,
+            cr.iterations_used == -1 ? nothing : Int(cr.iterations_used),
+            diagnostics,
+            enp,
+            trace_hat,
+            delta1,
+            delta2,
+            residual_scale,
+            leverage,
+            Int(cr.dimensions),
+            cv_scores,
+            predict_model,
+        )
+    finally
         ccall(
             (:jl_loess_free_result, libfastloess),
             Cvoid,
             (Ptr{CJlLoessResult},),
-            Ref(c_result),
+            r,
         )
-        error("fastloess error: $error_msg")
     end
-
-    n = Int(c_result.n)
-
-    # Extract arrays
-    x = ptr_to_vector(c_result.x, n)
-    y = ptr_to_vector(c_result.y, n)
-
-    if x === nothing || y === nothing
-        ccall(
-            (:jl_loess_free_result, libfastloess),
-            Cvoid,
-            (Ptr{CJlLoessResult},),
-            Ref(c_result),
-        )
-        error("fastloess error: result arrays are null")
-    end
-
-    x = x::Vector{Float64}
-    y = y::Vector{Float64}
-
-    standard_errors = ptr_to_vector(c_result.standard_errors, n)
-    confidence_lower = ptr_to_vector(c_result.confidence_lower, n)
-    confidence_upper = ptr_to_vector(c_result.confidence_upper, n)
-    prediction_lower = ptr_to_vector(c_result.prediction_lower, n)
-    prediction_upper = ptr_to_vector(c_result.prediction_upper, n)
-    residuals = ptr_to_vector(c_result.residuals, n)
-    robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
-
-    # Extract hat-matrix statistics
-    enp = isnan(c_result.enp) ? nothing : c_result.enp
-    trace_hat = isnan(c_result.trace_hat) ? nothing : c_result.trace_hat
-    delta1 = isnan(c_result.delta1) ? nothing : c_result.delta1
-    delta2 = isnan(c_result.delta2) ? nothing : c_result.delta2
-    residual_scale = isnan(c_result.residual_scale) ? nothing : c_result.residual_scale
-    leverage = ptr_to_vector(c_result.leverage, n)
-    gradient = ptr_to_vector(c_result.gradient, n * max(Int(c_result.dimensions), 1))
-
-    # Extract diagnostics
-    diagnostics = if !isnan(c_result.rmse)
-        Diagnostics(
-            c_result.rmse,
-            c_result.mae,
-            c_result.r_squared,
-            isnan(c_result.aic) ? nothing : c_result.aic,
-            isnan(c_result.aicc) ? nothing : c_result.aicc,
-            isnan(c_result.effective_df) ? nothing : c_result.effective_df,
-            c_result.residual_sd,
-        )
-    else
-        nothing
-    end
-
-    cv_scores = if c_result.cv_scores != C_NULL && c_result.cv_scores_len > 0
-        unsafe_wrap(Array, c_result.cv_scores, Int(c_result.cv_scores_len), own = false) |> copy
-    else
-        nothing
-    end
-
-    predict_model = if c_result.predict_handle != C_NULL
-        PredictModel(c_result.predict_handle)
-    else
-        nothing
-    end
-
-    result = LoessResult(
-        x,
-        y,
-        standard_errors,
-        confidence_lower,
-        confidence_upper,
-        prediction_lower,
-        prediction_upper,
-        residuals,
-        robustness_weights,
-        gradient,
-        c_result.fraction_used,
-        c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
-        diagnostics,
-        enp,
-        trace_hat,
-        delta1,
-        delta2,
-        residual_scale,
-        leverage,
-        Int(c_result.dimensions),
-        cv_scores,
-        predict_model,
-    )
-
-    # Free the C result
-    ccall(
-        (:jl_loess_free_result, libfastloess),
-        Cvoid,
-        (Ptr{CJlLoessResult},),
-        Ref(c_result),
-    )
-
-    return result
 end
 
 """
 	Base.append!(a::LoessResult, b::LoessResult) -> LoessResult
 
-Append the results from `b` to `a`. This modifies `a` in place.
+Append the per-point results from `b` to `a` in place. Per-point optional fields
+must be present in both results or neither.
+
+Results that carry fit-global state (`cv_scores`, `diagnostics`, `predict_model`,
+or hat-matrix summary fields) cannot be appended.
 """
 const _APPENDABLE_RESULT_FIELDS = (
     :standard_errors,
@@ -652,11 +637,32 @@ const _APPENDABLE_RESULT_FIELDS = (
     :residuals,
     :robustness_weights,
     :gradient,
+    :leverage,
+)
+
+const _NON_APPENDABLE_RESULT_FIELDS = (
+    :cv_scores,
+    :diagnostics,
+    :predict_model,
+    :enp,
+    :trace_hat,
+    :delta1,
+    :delta2,
+    :residual_scale,
 )
 
 function Base.append!(a::LoessResult, b::LoessResult)
     a.dimensions == b.dimensions ||
         throw(ArgumentError("cannot append results with different dimensions"))
+
+    for field ∈ _NON_APPENDABLE_RESULT_FIELDS
+        getfield(a, field) === nothing && getfield(b, field) === nothing || throw(
+            ArgumentError(
+                "cannot append results that include $field; append only streaming-style per-point outputs",
+            ),
+        )
+    end
+
     for field ∈ _APPENDABLE_RESULT_FIELDS
         left = getfield(a, field)
         right = getfield(b, field)
@@ -672,9 +678,6 @@ function Base.append!(a::LoessResult, b::LoessResult)
         values = getfield(a, field)
         values === nothing || append!(values, getfield(b, field))
     end
-
-    # Update fraction_used and iterations_used if they differ?
-    # Streaming usually keeps them constant. We'll keep a's values.
 
     return a
 end
@@ -843,7 +846,7 @@ mutable struct Loess
                 Cstring,
                 Cdouble,
                 Ptr{Cdouble},
-                Culong,
+                Csize_t,
                 Cstring,
                 Cint,
                 Cint,
@@ -854,7 +857,7 @@ mutable struct Loess
                 Cint,
                 Cint,
                 Ptr{Cdouble},
-                Culong,
+                Csize_t,
                 Cstring,
                 Cint,
                 Cint,
@@ -873,7 +876,7 @@ mutable struct Loess
             zero_weight_fallback,
             auto_converge,
             cv_ptr,
-            Culong(cv_len),
+            Csize_t(cv_len),
             cv_method,
             Cint(cv_k),
             Cint(parallel),
@@ -887,7 +890,7 @@ mutable struct Loess
                 weighted_metric_weights !== nothing ? pointer(weighted_metric_weights) :
                 Ptr{Cdouble}(C_NULL)
             ),
-            Culong(
+            Csize_t(
                 weighted_metric_weights !== nothing ? length(weighted_metric_weights) : 0,
             ),
             missing,
@@ -940,7 +943,12 @@ mutable struct Loess
 
         obj = new(handle, configured_dimensions)
         finalizer(
-            x -> ccall((:jl_loess_free, libfastloess), Cvoid, (Ptr{Cvoid},), x.handle),
+            x -> begin
+                if x.handle != C_NULL
+                    ccall((:jl_loess_free, libfastloess), Cvoid, (Ptr{Cvoid},), x.handle)
+                    x.handle = C_NULL
+                end
+            end,
             obj,
         )
         return obj
@@ -990,13 +998,13 @@ function fit(
     c_result = GC.@preserve l x y custom_weights ccall(
         (:jl_loess_fit, libfastloess),
         CJlLoessResult,
-        (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong, Ptr{Cdouble}, Culong),
+        (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Csize_t, Ptr{Cdouble}, Csize_t),
         l.handle,
         x,
         y,
-        Culong(n),
+        Csize_t(n),
         custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL),
-        Culong(custom_weights !== nothing ? length(custom_weights) : 0),
+        Csize_t(custom_weights !== nothing ? length(custom_weights) : 0),
     )
 
     return convert_result(c_result)
@@ -1051,13 +1059,13 @@ function fit(
     c_result = GC.@preserve l x_flat y custom_weights ccall(
         (:jl_loess_fit, libfastloess),
         CJlLoessResult,
-        (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong, Ptr{Cdouble}, Culong),
+        (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Csize_t, Ptr{Cdouble}, Csize_t),
         l.handle,
         x_flat,
         y,
-        Culong(n),
+        Csize_t(n),
         custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL),
-        Culong(custom_weights !== nothing ? length(custom_weights) : 0),
+        Csize_t(custom_weights !== nothing ? length(custom_weights) : 0),
     )
 
     return convert_result(c_result)
@@ -1152,9 +1160,9 @@ mutable struct StreamingLoess
         )
         # Resolve weighted metric arguments
         wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
-            weighted_metric_weights, Culong(length(weighted_metric_weights))
+            weighted_metric_weights, Csize_t(length(weighted_metric_weights))
         else
-            C_NULL, Culong(0)
+            C_NULL, Csize_t(0)
         end
         cell_val = isnothing(cell) ? NaN : Float64(cell)
         iv_val = isnothing(interpolation_vertices) ? Cint(-1) : Cint(interpolation_vertices)
@@ -1189,7 +1197,7 @@ mutable struct StreamingLoess
                 Cint,
                 Cint,
                 Ptr{Cdouble},
-                Culong,
+                Csize_t,
                 Cstring,
                 Cint,
                 Cdouble,
@@ -1234,12 +1242,17 @@ mutable struct StreamingLoess
 
         obj = new(handle, configured_dimensions, ReentrantLock())
         finalizer(
-            x -> ccall(
-                (:jl_streaming_loess_free, libfastloess),
-                Cvoid,
-                (Ptr{Cvoid},),
-                x.handle,
-            ),
+            x -> begin
+                if x.handle != C_NULL
+                    ccall(
+                        (:jl_streaming_loess_free, libfastloess),
+                        Cvoid,
+                        (Ptr{Cvoid},),
+                        x.handle,
+                    )
+                    x.handle = C_NULL
+                end
+            end,
             obj,
         )
         return obj
@@ -1277,22 +1290,22 @@ function process_chunk(
             GC.@preserve s x y ccall(
                 (:jl_streaming_loess_process_chunk, libfastloess),
                 CJlLoessResult,
-                (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+                (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Csize_t),
                 s.handle,
                 x,
                 y,
-                Culong(n),
+                Csize_t(n),
             )
         else
             GC.@preserve s x y custom_weights ccall(
                 (:jl_streaming_loess_process_chunk_weighted, libfastloess),
                 CJlLoessResult,
-                (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+                (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Csize_t),
                 s.handle,
                 x,
                 y,
                 custom_weights,
-                Culong(n),
+                Csize_t(n),
             )
         end
     end
@@ -1334,22 +1347,22 @@ function process_chunk(
             GC.@preserve s x_flat y ccall(
                 (:jl_streaming_loess_process_chunk, libfastloess),
                 CJlLoessResult,
-                (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+                (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Csize_t),
                 s.handle,
                 x_flat,
                 y,
-                Culong(n),
+                Csize_t(n),
             )
         else
             GC.@preserve s x_flat y custom_weights ccall(
                 (:jl_streaming_loess_process_chunk_weighted, libfastloess),
                 CJlLoessResult,
-                (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+                (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Csize_t),
                 s.handle,
                 x_flat,
                 y,
                 custom_weights,
-                Culong(n),
+                Csize_t(n),
             )
         end
     end
@@ -1412,7 +1425,7 @@ Stateful online LOESS smoother.
   degree at boundaries when higher degrees fail.
 - `missing::String = "error"`: Policy for non-finite (NaN/Inf) `x`/`y` values passed
   to `add_point`. `"error"` (default) raises, `"drop"` silently ignores the point
-  (returns `nothing` instead of adding it to the window).
+  (returns `:dropped` instead of adding it to the window).
 - `intervals = nothing`: Grouped `confidence` and `prediction` coverage levels.
 	Interval levels and the `"se"` output require `update_mode="full"`.
 """
@@ -1453,9 +1466,9 @@ mutable struct OnlineLoess
             _output_flags(outputs; allowed = ("weights", "gradient", "derivative", "se"))
         # Resolve weighted metric arguments
         wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
-            weighted_metric_weights, Culong(length(weighted_metric_weights))
+            weighted_metric_weights, Csize_t(length(weighted_metric_weights))
         else
-            C_NULL, Culong(0)
+            C_NULL, Csize_t(0)
         end
         cell_val = isnothing(cell) ? NaN : Float64(cell)
         iv_val = isnothing(interpolation_vertices) ? Cint(-1) : Cint(interpolation_vertices)
@@ -1487,7 +1500,7 @@ mutable struct OnlineLoess
                 Cint,
                 Cint,
                 Ptr{Cdouble},
-                Culong,
+                Csize_t,
                 Cstring,
                 Cint,
                 Cdouble,
@@ -1529,12 +1542,17 @@ mutable struct OnlineLoess
 
         obj = new(handle, configured_dimensions, ReentrantLock())
         finalizer(
-            x -> ccall(
-                (:jl_online_loess_free, libfastloess),
-                Cvoid,
-                (Ptr{Cvoid},),
-                x.handle,
-            ),
+            x -> begin
+                if x.handle != C_NULL
+                    ccall(
+                        (:jl_online_loess_free, libfastloess),
+                        Cvoid,
+                        (Ptr{Cvoid},),
+                        x.handle,
+                    )
+                    x.handle = C_NULL
+                end
+            end,
             obj,
         )
         return obj
@@ -1542,12 +1560,16 @@ mutable struct OnlineLoess
 end
 
 """
-	add_point(o::OnlineLoess, x, y) -> Union{OnlineOutput, Nothing}
+	add_point(o::OnlineLoess, x, y) -> Union{OnlineOutput, Nothing, Symbol}
 
 Add one point to the online processor and return its smoothed value. For a
 one-dimensional model, pass a scalar coordinate; for multivariate models, pass
-a vector with one coordinate per configured dimension. Returns `nothing` while
-the window is still filling (fewer than `min_points` have been seen).
+a vector with one coordinate per configured dimension.
+
+Returns:
+- an `OnlineOutput` once the window has at least `min_points` finite observations
+- `nothing` while the window is still filling
+- `:dropped` when `missing = "drop"` and a coordinate or `y` is non-finite
 """
 function add_point(o::OnlineLoess, x::Real, y::Real; weight::Real = 1.0)
     return add_point(o, Float64[x], Float64(y); weight)
@@ -1563,98 +1585,92 @@ function add_point(o::OnlineLoess, x::AbstractVector{<:Real}, y::Real; weight::R
         )
     end
     response = Float64(y)
-    c_result = lock(o.lock) do
-        GC.@preserve o x_values ccall(
-            (:jl_online_loess_add_point, libfastloess),
-            CJlOnlineOutput,
-            (Ptr{Cvoid}, Ptr{Cdouble}, Culong, Cdouble, Cdouble),
-            o.handle,
-            x_values,
-            Culong(length(x_values)),
-            response,
-            Float64(weight),
-        )
-    end
+    c_result = Ref(
+        lock(o.lock) do
+            GC.@preserve o x_values ccall(
+                (:jl_online_loess_add_point, libfastloess),
+                CJlOnlineOutput,
+                (Ptr{Cvoid}, Ptr{Cdouble}, Csize_t, Cdouble, Cdouble),
+                o.handle,
+                x_values,
+                Csize_t(length(x_values)),
+                response,
+                Float64(weight),
+            )
+        end,
+    )
 
-    if c_result.error != C_NULL
-        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+    try
+        if c_result[].error != C_NULL
+            error_msg = unsafe_string(Ptr{UInt8}(c_result[].error))
+            error("fastloess error: $error_msg")
+        end
+
+        if c_result[].has_value == 0
+            return nothing
+        elseif c_result[].has_value < 0
+            return :dropped
+        end
+
+        gradient = ptr_to_vector(c_result[].gradient, max(Int(c_result[].dimensions), 1))
+        return OnlineOutput(
+            c_result[].y,
+            isnan(c_result[].standard_error) ? nothing : c_result[].standard_error,
+            isnan(c_result[].residual) ? nothing : c_result[].residual,
+            isnan(c_result[].robustness_weight) ? nothing : c_result[].robustness_weight,
+            c_result[].iterations_used == -1 ? nothing : Int(c_result[].iterations_used),
+            isnan(c_result[].confidence_lower) ? nothing : c_result[].confidence_lower,
+            isnan(c_result[].confidence_upper) ? nothing : c_result[].confidence_upper,
+            isnan(c_result[].prediction_lower) ? nothing : c_result[].prediction_lower,
+            isnan(c_result[].prediction_upper) ? nothing : c_result[].prediction_upper,
+            gradient,
+        )
+    finally
         ccall(
             (:jl_online_free_output, libfastloess),
             Cvoid,
             (Ptr{CJlOnlineOutput},),
-            Ref(c_result),
+            c_result,
         )
-        error("fastloess error: $error_msg")
     end
-
-    if c_result.has_value == 0
-        return nothing
-    end
-
-    gradient = ptr_to_vector(c_result.gradient, max(Int(c_result.dimensions), 1))
-
-    output = OnlineOutput(
-        c_result.y,
-        isnan(c_result.standard_error) ? nothing : c_result.standard_error,
-        isnan(c_result.residual) ? nothing : c_result.residual,
-        isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
-        c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
-        isnan(c_result.confidence_lower) ? nothing : c_result.confidence_lower,
-        isnan(c_result.confidence_upper) ? nothing : c_result.confidence_upper,
-        isnan(c_result.prediction_lower) ? nothing : c_result.prediction_lower,
-        isnan(c_result.prediction_upper) ? nothing : c_result.prediction_upper,
-        gradient,
-    )
-
-    # Free the C-allocated gradient buffer now that it has been copied above.
-    ccall(
-        (:jl_online_free_output, libfastloess),
-        Cvoid,
-        (Ptr{CJlOnlineOutput},),
-        Ref(c_result),
-    )
-
-    return output
 end
 
 function window_diagnostics(o::OnlineLoess)
-    c_result = lock(o.lock) do
-        GC.@preserve o ccall(
-            (:jl_online_loess_window_diagnostics, libfastloess),
-            CJlOnlineDiagnostics,
-            (Ptr{Cvoid},),
-            o.handle,
+    c_result = Ref(
+        lock(o.lock) do
+            GC.@preserve o ccall(
+                (:jl_online_loess_window_diagnostics, libfastloess),
+                CJlOnlineDiagnostics,
+                (Ptr{Cvoid},),
+                o.handle,
+            )
+        end,
+    )
+    try
+        if c_result[].error != C_NULL
+            error_message = unsafe_string(Ptr{UInt8}(c_result[].error))
+            error("fastloess error: $error_message")
+        end
+        if c_result[].has_value == 0
+            return nothing
+        end
+        return Diagnostics(
+            c_result[].rmse,
+            c_result[].mae,
+            c_result[].r_squared,
+            isnan(c_result[].aic) ? nothing : c_result[].aic,
+            isnan(c_result[].aicc) ? nothing : c_result[].aicc,
+            isnan(c_result[].effective_df) ? nothing : c_result[].effective_df,
+            c_result[].residual_sd,
         )
-    end
-    if c_result.error != C_NULL
-        error_message = unsafe_string(Ptr{UInt8}(c_result.error))
+    finally
         ccall(
             (:jl_online_free_diagnostics, libfastloess),
             Cvoid,
             (Ptr{CJlOnlineDiagnostics},),
-            Ref(c_result),
+            c_result,
         )
-        error("fastloess error: $error_message")
     end
-    if c_result.has_value == 0
-        return nothing
-    end
-    result = Diagnostics(
-        c_result.rmse,
-        c_result.mae,
-        c_result.r_squared,
-        isnan(c_result.aic) ? nothing : c_result.aic,
-        isnan(c_result.aicc) ? nothing : c_result.aicc,
-        isnan(c_result.effective_df) ? nothing : c_result.effective_df,
-        c_result.residual_sd,
-    )
-    ccall(
-        (:jl_online_free_diagnostics, libfastloess),
-        Cvoid,
-        (Ptr{CJlOnlineDiagnostics},),
-        Ref(c_result),
-    )
-    return result
 end
 
 function predict_window(
@@ -1668,62 +1684,60 @@ function predict_window(
 )
     flags = _output_flags(outputs; allowed = ("se", "gradient", "derivative"))
     interval_options = _interval_options(intervals)
-    c_result = lock(o.lock) do
-        GC.@preserve o new_x ccall(
-            (:jl_online_loess_predict_window, libfastloess),
-            CJlPredictResult,
-            (
-                Ptr{Cvoid},
-                Ptr{Cdouble},
-                Culong,
-                Cint,
-                Cdouble,
-                Cdouble,
-                Cint,
-                Cstring,
-                Cdouble,
-                Cdouble,
-            ),
-            o.handle,
-            new_x,
-            Culong(length(new_x)),
-            Cint(flags.se),
-            interval_options.confidence,
-            interval_options.prediction,
-            Cint(flags.gradient),
-            extrapolation,
-            isnothing(max_extrapolation_distance) ? NaN : max_extrapolation_distance,
-            isnothing(max_neighbor_distance) ? NaN : max_neighbor_distance,
+    c_result = Ref(
+        lock(o.lock) do
+            GC.@preserve o new_x ccall(
+                (:jl_online_loess_predict_window, libfastloess),
+                CJlPredictResult,
+                (
+                    Ptr{Cvoid},
+                    Ptr{Cdouble},
+                    Csize_t,
+                    Cint,
+                    Cdouble,
+                    Cdouble,
+                    Cint,
+                    Cstring,
+                    Cdouble,
+                    Cdouble,
+                ),
+                o.handle,
+                new_x,
+                Csize_t(length(new_x)),
+                Cint(flags.se),
+                interval_options.confidence,
+                interval_options.prediction,
+                Cint(flags.gradient),
+                extrapolation,
+                isnothing(max_extrapolation_distance) ? NaN : max_extrapolation_distance,
+                isnothing(max_neighbor_distance) ? NaN : max_neighbor_distance,
+            )
+        end,
+    )
+    try
+        if c_result[].error != C_NULL
+            error_message = unsafe_string(Ptr{UInt8}(c_result[].error))
+            error("fastloess error: $error_message")
+        end
+        n = Int(c_result[].n)
+        dimensions = max(Int(c_result[].dimensions), 1)
+        return PredictResult(
+            ptr_to_vector(c_result[].y, n),
+            ptr_to_vector(c_result[].standard_errors, n),
+            ptr_to_vector(c_result[].confidence_lower, n),
+            ptr_to_vector(c_result[].confidence_upper, n),
+            ptr_to_vector(c_result[].prediction_lower, n),
+            ptr_to_vector(c_result[].prediction_upper, n),
+            ptr_to_vector(c_result[].derivative, n * dimensions),
         )
-    end
-    if c_result.error != C_NULL
-        error_message = unsafe_string(Ptr{UInt8}(c_result.error))
+    finally
         ccall(
             (:jl_predict_free_result, libfastloess),
             Cvoid,
             (Ptr{CJlPredictResult},),
-            Ref(c_result),
+            c_result,
         )
-        error("fastloess error: $error_message")
     end
-    n = Int(c_result.n)
-    dimensions = max(Int(c_result.dimensions), 1)
-    result = PredictResult(
-        ptr_to_vector(c_result.y, n),
-        ptr_to_vector(c_result.standard_errors, n),
-        ptr_to_vector(c_result.confidence_lower, n),
-        ptr_to_vector(c_result.confidence_upper, n),
-        ptr_to_vector(c_result.prediction_lower, n),
-        ptr_to_vector(c_result.prediction_upper, n),
-        ptr_to_vector(c_result.derivative, n * dimensions),
-    )
-    ccall(
-        (:jl_predict_free_result, libfastloess),
-        Cvoid,
-        (Ptr{CJlPredictResult},),
-        Ref(c_result),
-    )
-    return result
 end
 
 end # module FastLOESS

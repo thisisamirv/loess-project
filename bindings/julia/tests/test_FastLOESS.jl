@@ -564,7 +564,7 @@ using FastLOESS
             results = [add_point(online, x[i], y[i]) for i ∈ eachindex(x)]
 
             @test any(r !== nothing for r ∈ results)
-            @test all(r === nothing || r isa OnlineOutput for r ∈ results)
+            @test all(r === nothing || r === :dropped || r isa OnlineOutput for r ∈ results)
         end
 
         @testset "with noise" begin
@@ -599,7 +599,8 @@ using FastLOESS
         @testset "missing = \"drop\" ignores non-finite point" begin
             online = OnlineLoess(fraction = 0.5, window_capacity = 10, missing = "drop")
             result = add_point(online, 1.0, NaN)
-            @test result === nothing
+            @test result === :dropped
+            @test add_point(online, 1.0, 2.0) === nothing  # still filling
         end
 
         @testset "return_se requires update_mode = full" begin

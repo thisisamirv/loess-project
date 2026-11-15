@@ -9,7 +9,7 @@ use ptr::null_mut;
 use std::cell::RefCell;
 use std::ffi::CString;
 use std::mem::replace;
-use std::os::raw::{c_char, c_double, c_int, c_ulong};
+use std::os::raw::{c_char, c_double, c_int};
 use std::panic::catch_unwind;
 use std::ptr;
 use std::slice::from_raw_parts;
@@ -58,8 +58,10 @@ pub extern "C" fn jl_last_error_message() -> *const c_char {
 }
 
 // Per-point result from an online update, passed across the FFI boundary.
-// has_value = 1 means the window is ready and smoothed is valid; 0 means
-// the window is still filling (all other fields are undefined in that case).
+// has_value:
+//   1  = window ready; smoothed fields are valid
+//   0  = window still filling (smoothed fields undefined)
+//  -1  = point dropped under missing="drop" (smoothed fields undefined)
 #[repr(C)]
 pub struct JlOnlineOutput {
     pub has_value: c_int,
@@ -141,7 +143,7 @@ pub struct JlLoessResult {
     /// Smoothed y values (length = n)
     pub y: *mut c_double,
     /// Number of data points
-    pub n: c_ulong,
+    pub n: usize,
 
     /// Standard errors (NULL if not computed)
     pub standard_errors: *mut c_double,
@@ -187,10 +189,13 @@ pub struct JlLoessResult {
     pub dimensions: c_int,
     /// Cross-validation scores (NULL if not computed, length = cv_scores_len)
     pub cv_scores: *mut c_double,
-    pub cv_scores_len: c_ulong,
+    pub cv_scores_len: usize,
 
     /// Opaque handle for `jl_predict()`, non-NULL only if `retain_model` was set to 1.
-    /// Must eventually be freed via `jl_predict_handle_free`.
+    ///
+    /// Ownership: callers that keep the handle must call `jl_loess_take_predict_handle`
+    /// before `jl_loess_free_result`. Otherwise `jl_loess_free_result` frees it.
+    /// Taken handles must eventually be freed via `jl_predict_handle_free`.
     pub predict_handle: *mut JlPredictHandle,
 
     /// Error message (NULL if no error)
@@ -259,7 +264,7 @@ fn loess_result_to_jl(mut result: LoessResult<f64>) -> JlLoessResult {
     JlLoessResult {
         x: p.x,
         y: p.y,
-        n: p.n as c_ulong,
+        n: p.n,
         standard_errors: p.standard_errors,
         confidence_lower: p.confidence_lower,
         confidence_upper: p.confidence_upper,
@@ -285,7 +290,7 @@ fn loess_result_to_jl(mut result: LoessResult<f64>) -> JlLoessResult {
         leverage: p.leverage,
         dimensions: p.dimensions,
         cv_scores: p.cv_scores,
-        cv_scores_len: p.cv_scores_len as c_ulong,
+        cv_scores_len: p.cv_scores_len,
         predict_handle: p
             .predict_state
             .map(|state| Box::into_raw(Box::new(JlPredictHandle { state })))
@@ -348,7 +353,7 @@ pub unsafe extern "C" fn jl_loess_new(
     zero_weight_fallback: *const c_char,
     auto_converge: c_double,
     cv_fractions: *const c_double,
-    cv_fractions_len: c_ulong,
+    cv_fractions_len: usize,
     cv_method: *const c_char,
     cv_k: c_int,
     parallel: c_int,
@@ -360,7 +365,7 @@ pub unsafe extern "C" fn jl_loess_new(
     return_se: c_int,
     return_sorted: c_int,
     weighted_metric_weights: *const c_double,
-    weighted_metric_weights_len: c_ulong,
+    weighted_metric_weights_len: usize,
     missing: *const c_char,
     retain_model: c_int,
     return_gradient: c_int,
@@ -498,9 +503,9 @@ pub unsafe extern "C" fn jl_loess_fit(
     config_ptr: *const JlLoessConfig,
     x: *const c_double,
     y: *const c_double,
-    n: c_ulong,
+    n: usize,
     custom_weights: *const c_double,
-    custom_weights_n: c_ulong,
+    custom_weights_n: usize,
 ) -> JlLoessResult {
     let result = catch_unwind(|| {
         if config_ptr.is_null() {
@@ -516,11 +521,11 @@ pub unsafe extern "C" fn jl_loess_fit(
         }
 
         // For multi-dimensional LOESS, x has n * dimensions elements (row-major flat).
-        let x_n = n as usize * config.dimensions.max(1);
+        let x_n = n * config.dimensions.max(1);
         let x_slice = unsafe { from_raw_parts(x, x_n) };
-        let y_slice = unsafe { from_raw_parts(y, n as usize) };
+        let y_slice = unsafe { from_raw_parts(y, n) };
 
-        let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_n as usize);
+        let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_n);
         let builder = config.base_builder.clone();
 
         let model = match shared_parse::build_batch(builder, cw) {
@@ -542,7 +547,30 @@ pub unsafe extern "C" fn jl_loess_fit(
     }
 }
 
-/// Free the LoessResult.
+/// Take ownership of `predict_handle`, nulling it in `result` so
+/// `jl_loess_free_result` will not free it. The returned pointer must be freed
+/// with `jl_predict_handle_free` (or transferred into a `PredictModel`).
+///
+/// # Safety
+/// `result` must be a valid pointer to a `JlLoessResult`, or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_loess_take_predict_handle(
+    result: *mut JlLoessResult,
+) -> *mut JlPredictHandle {
+    if result.is_null() {
+        return null_mut();
+    }
+    let res = &mut *result;
+    let handle = res.predict_handle;
+    res.predict_handle = null_mut();
+    handle
+}
+
+/// Free the LoessResult buffers.
+///
+/// Also frees `predict_handle` if it is still non-null. Callers that keep the
+/// handle must call `jl_loess_take_predict_handle` first. Freed pointers are
+/// nulled so a second call is a no-op.
 ///
 /// # Safety
 /// `result` must be a valid pointer to a `JlLoessResult` struct.
@@ -552,22 +580,42 @@ pub unsafe extern "C" fn jl_loess_free_result(result: *mut JlLoessResult) {
         return;
     }
     let res = &mut *result;
-    let n = res.n as usize;
-    let cv_n = res.cv_scores_len as usize;
+    let n = res.n;
+    let cv_n = res.cv_scores_len;
+    let grad_n = n * res.dimensions.max(1) as usize;
 
     shared_parse::free_raw_f64_buffer(res.x, n);
+    res.x = null_mut();
     shared_parse::free_raw_f64_buffer(res.y, n);
+    res.y = null_mut();
     shared_parse::free_raw_f64_buffer(res.standard_errors, n);
+    res.standard_errors = null_mut();
     shared_parse::free_raw_f64_buffer(res.confidence_lower, n);
+    res.confidence_lower = null_mut();
     shared_parse::free_raw_f64_buffer(res.confidence_upper, n);
+    res.confidence_upper = null_mut();
     shared_parse::free_raw_f64_buffer(res.prediction_lower, n);
+    res.prediction_lower = null_mut();
     shared_parse::free_raw_f64_buffer(res.prediction_upper, n);
+    res.prediction_upper = null_mut();
     shared_parse::free_raw_f64_buffer(res.residuals, n);
+    res.residuals = null_mut();
     shared_parse::free_raw_f64_buffer(res.robustness_weights, n);
-    shared_parse::free_raw_f64_buffer(res.gradient, n * res.dimensions.max(1) as usize);
+    res.robustness_weights = null_mut();
+    shared_parse::free_raw_f64_buffer(res.gradient, grad_n);
+    res.gradient = null_mut();
     shared_parse::free_raw_f64_buffer(res.leverage, n);
+    res.leverage = null_mut();
     shared_parse::free_raw_f64_buffer(res.cv_scores, cv_n);
+    res.cv_scores = null_mut();
+    res.cv_scores_len = 0;
+    res.n = 0;
+    if !res.predict_handle.is_null() {
+        let _ = Box::from_raw(res.predict_handle);
+        res.predict_handle = null_mut();
+    }
     shared_parse::free_raw_c_string(res.error);
+    res.error = null_mut();
 }
 
 /// Free the Loess configuration.
@@ -588,7 +636,7 @@ pub struct JlPredictResult {
     /// Predicted y values, one per query point (length = n)
     pub y: *mut c_double,
     /// Number of query points
-    pub n: c_ulong,
+    pub n: usize,
     /// Standard errors (NULL if not requested)
     pub standard_errors: *mut c_double,
     /// Lower confidence bounds (NULL if not requested)
@@ -645,7 +693,7 @@ fn predict_error_result(msg: &str) -> JlPredictResult {
 pub unsafe extern "C" fn jl_predict(
     handle: *mut JlPredictHandle,
     new_x: *const c_double,
-    new_x_len: c_ulong,
+    new_x_len: usize,
     return_se: c_int,
     confidence_level: c_double,
     prediction_level: c_double,
@@ -686,7 +734,7 @@ pub unsafe extern "C" fn jl_predict(
         };
 
         JlPredictResult {
-            n: output.y.len() as c_ulong,
+            n: output.y.len() as usize,
             y: shared_parse::vec_to_raw_ptr(output.y),
             standard_errors: shared_parse::opt_vec_to_raw_ptr(output.standard_errors),
             confidence_lower: shared_parse::opt_vec_to_raw_ptr(output.confidence_lower),
@@ -707,6 +755,8 @@ pub unsafe extern "C" fn jl_predict(
 
 /// Free a JlPredictResult's heap-allocated buffers.
 ///
+/// Freed pointers are nulled so a second call is a no-op.
+///
 /// # Safety
 /// `result` must be a valid pointer to a JlPredictResult struct.
 #[unsafe(no_mangle)]
@@ -715,15 +765,25 @@ pub unsafe extern "C" fn jl_predict_free_result(result: *mut JlPredictResult) {
         return;
     }
     let r = unsafe { &mut *result };
-    let n = r.n as usize;
+    let n = r.n;
+    let deriv_n = n * r.dimensions.max(1) as usize;
     shared_parse::free_raw_f64_buffer(r.y, n);
+    r.y = null_mut();
     shared_parse::free_raw_f64_buffer(r.standard_errors, n);
+    r.standard_errors = null_mut();
     shared_parse::free_raw_f64_buffer(r.confidence_lower, n);
+    r.confidence_lower = null_mut();
     shared_parse::free_raw_f64_buffer(r.confidence_upper, n);
+    r.confidence_upper = null_mut();
     shared_parse::free_raw_f64_buffer(r.prediction_lower, n);
+    r.prediction_lower = null_mut();
     shared_parse::free_raw_f64_buffer(r.prediction_upper, n);
-    shared_parse::free_raw_f64_buffer(r.derivative, n * r.dimensions.max(1) as usize);
+    r.prediction_upper = null_mut();
+    shared_parse::free_raw_f64_buffer(r.derivative, deriv_n);
+    r.derivative = null_mut();
+    r.n = 0;
     shared_parse::free_raw_c_string(r.error);
+    r.error = null_mut();
 }
 
 /// Free a `JlPredictHandle` returned via `JlLoessResult::predict_handle`.
@@ -788,7 +848,10 @@ pub unsafe extern "C" fn jl_loess_set_boundary_degree_fallback(
     config.base_builder = builder.boundary_degree_fallback(enabled != 0);
 }
 
-/// Set the cross-validation random seed for a config.
+/// Set the cross-validation / bootstrap random seed for a config.
+///
+/// Prefer passing `seed` at construction when the Julia API exposes it; this
+/// setter remains for FFI callers that configure the builder after `jl_loess_new`.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
@@ -838,7 +901,7 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
     interpolation_vertices: c_int,
     boundary_degree_fallback: c_int,
     weighted_metric_weights: *const c_double,
-    weighted_metric_weights_len: c_ulong,
+    weighted_metric_weights_len: usize,
     missing: *const c_char,
     return_gradient: c_int,
     confidence_intervals: c_double,
@@ -991,7 +1054,7 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
     ptr: *mut JlStreamingLoess,
     x: *const c_double,
     y: *const c_double,
-    n: c_ulong,
+    n: usize,
 ) -> JlLoessResult {
     let result = catch_unwind(|| {
         if ptr.is_null() {
@@ -1033,7 +1096,7 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk_weighted(
     x: *const c_double,
     y: *const c_double,
     weights: *const c_double,
-    n: c_ulong,
+    n: usize,
 ) -> JlLoessResult {
     let result = catch_unwind(|| {
         if ptr.is_null() {
@@ -1134,7 +1197,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
     interpolation_vertices: c_int,
     boundary_degree_fallback: c_int,
     weighted_metric_weights: *const c_double,
-    weighted_metric_weights_len: c_ulong,
+    weighted_metric_weights_len: usize,
     missing: *const c_char,
     return_gradient: c_int,
     confidence_intervals: c_double,
@@ -1281,7 +1344,8 @@ pub unsafe extern "C" fn jl_online_loess_new(
 }
 
 /// Add a single point to the processor and return the smoothed value for that
-/// point, or a result with `has_value = 0` if the window is still filling.
+/// point. `has_value` is `1` when ready, `0` while the window is still filling,
+/// and `-1` when the point was dropped under `missing = "drop"`.
 ///
 /// # Safety
 /// `ptr` must be a valid pointer.
@@ -1289,7 +1353,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
 pub unsafe extern "C" fn jl_online_loess_add_point(
     ptr: *mut JlOnlineLoess,
     x: *const c_double,
-    x_n: c_ulong,
+    x_n: usize,
     y: c_double,
     weight: c_double,
 ) -> JlOnlineOutput {
@@ -1309,14 +1373,19 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
             };
         }
         let processor = unsafe { &mut *ptr };
-        let coordinates = unsafe { from_raw_parts(x, x_n as usize) };
+        let coordinates = unsafe { from_raw_parts(x, x_n) };
+        let dropped_candidate =
+            coordinates.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
 
         match processor.inner.add_point_weighted(coordinates, y, weight) {
             Err(e) => JlOnlineOutput {
                 error: shared_parse::into_raw_error_c_string(&e.to_string()),
                 ..JlOnlineOutput::default()
             },
-            Ok(None) => JlOnlineOutput::default(),
+            Ok(None) => JlOnlineOutput {
+                has_value: if dropped_candidate { -1 } else { 0 },
+                ..JlOnlineOutput::default()
+            },
             Ok(Some(o)) => {
                 let (
                     standard_error,
@@ -1426,7 +1495,7 @@ pub unsafe extern "C" fn jl_online_free_diagnostics(diagnostics: *mut JlOnlineDi
 pub unsafe extern "C" fn jl_online_loess_predict_window(
     ptr: *mut JlOnlineLoess,
     new_x: *const c_double,
-    new_x_n: c_ulong,
+    new_x_n: usize,
     return_se: c_int,
     confidence_level: c_double,
     prediction_level: c_double,
@@ -1476,7 +1545,7 @@ pub unsafe extern "C" fn jl_online_loess_predict_window(
             Err(error) => return predict_error_result(&error.to_string()),
         };
         JlPredictResult {
-            n: output.y.len() as c_ulong,
+            n: output.y.len() as usize,
             y: shared_parse::vec_to_raw_ptr(output.y),
             standard_errors: shared_parse::opt_vec_to_raw_ptr(output.standard_errors),
             confidence_lower: shared_parse::opt_vec_to_raw_ptr(output.confidence_lower),

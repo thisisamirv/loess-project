@@ -3,6 +3,19 @@
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+* Breaking change: `OnlineLoess` with `missing = "drop"` now returns `:dropped` for non-finite points instead of `nothing`, so drops are distinguishable from a still-filling window.
+* `append!` on `LoessResult` now rejects results that include fit-global state (`cv_scores`, `diagnostics`, `predict_model`, or hat-matrix summaries); only streaming-style per-point fields can be concatenated.
+
+### Fixed
+
+* Fixed retained-model `predict_handle` ownership so error paths no longer leak the handle and successful conversion no longer risks double-free.
+* Free native result buffers with `try`/`finally`, and clear finalizer-owned handles after free.
+* Fixed FFI length fields truncating on 64-bit Windows by using pointer-sized sizes instead of `Culong`.
+
 ## 3.0.0
 
 ### Added
