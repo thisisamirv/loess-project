@@ -8,6 +8,7 @@ import "C"
 import (
 	"errors"
 	"runtime"
+	"unsafe"
 )
 
 // StreamingOptions configures a StreamingLoess model. Cross-validation is
@@ -123,7 +124,7 @@ func DefaultStreamingOptions() StreamingOptions {
 //
 // StreamingLoess is not safe for concurrent use.
 type StreamingLoess struct {
-	ptr *C.fastloess_GoStreamingLoess
+	ptr unsafe.Pointer // *C.fastloess_GoStreamingLoess
 }
 
 // NewStreamingLoess creates a new streaming model with the given options.
@@ -215,7 +216,8 @@ func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
 		return nil, errors.New(errMsg)
 	}
 
-	s := &StreamingLoess{ptr: ptr}
+	s := &StreamingLoess{}
+	storeNative(&s.ptr, unsafe.Pointer(ptr))
 	runtime.SetFinalizer(s, finalizeStreaming)
 	return s, nil
 }
@@ -224,10 +226,18 @@ func finalizeStreaming(s *StreamingLoess) {
 	_ = s.Close()
 }
 
+func (s *StreamingLoess) native() *C.fastloess_GoStreamingLoess {
+	if s == nil {
+		return nil
+	}
+	return (*C.fastloess_GoStreamingLoess)(loadNative(&s.ptr))
+}
+
 // ProcessChunk fits and returns the result for one chunk of data. For
 // multivariate input (Dimensions > 1), x is flattened row-major.
 func (s *StreamingLoess) ProcessChunk(x, y []float64) (Result, error) {
-	if s == nil || s.ptr == nil {
+	ptr := s.native()
+	if ptr == nil {
 		return Result{}, errors.New("fastloess: ProcessChunk called on a closed StreamingLoess model")
 	}
 	if len(x) == 0 || len(y) == 0 {
@@ -235,15 +245,17 @@ func (s *StreamingLoess) ProcessChunk(x, y []float64) (Result, error) {
 	}
 	xPtr, xLen := cDoubles(x)
 	yPtr, yLen := cDoubles(y)
-	cres := C.go_streaming_process(s.ptr, xPtr, xLen, yPtr, yLen)
+	cres := C.go_streaming_process(ptr, xPtr, xLen, yPtr, yLen)
 	runtime.KeepAlive(s)
+	keepAliveSlices(x, y)
 	return resultFromC(cres)
 }
 
 // ProcessChunkWeighted processes a chunk with one case weight per observation.
 // Weights must be finite, non-negative, and the same length as y.
 func (s *StreamingLoess) ProcessChunkWeighted(x, y, customWeights []float64) (Result, error) {
-	if s == nil || s.ptr == nil {
+	ptr := s.native()
+	if ptr == nil {
 		return Result{}, errors.New("fastloess: ProcessChunkWeighted called on a closed StreamingLoess model")
 	}
 	if len(x) == 0 || len(y) == 0 {
@@ -252,20 +264,19 @@ func (s *StreamingLoess) ProcessChunkWeighted(x, y, customWeights []float64) (Re
 	xPtr, xLen := cDoubles(x)
 	yPtr, yLen := cDoubles(y)
 	weightsPtr, weightsLen := cDoubles(customWeights)
-	cres := C.go_streaming_process_weighted(s.ptr, xPtr, xLen, yPtr, yLen, weightsPtr, weightsLen)
+	cres := C.go_streaming_process_weighted(ptr, xPtr, xLen, yPtr, yLen, weightsPtr, weightsLen)
 	runtime.KeepAlive(s)
-	runtime.KeepAlive(x)
-	runtime.KeepAlive(y)
-	runtime.KeepAlive(customWeights)
+	keepAliveSlices(x, y, customWeights)
 	return resultFromC(cres)
 }
 
 // Finalize flushes any buffered data and returns the final merged result.
 func (s *StreamingLoess) Finalize() (Result, error) {
-	if s == nil || s.ptr == nil {
+	ptr := s.native()
+	if ptr == nil {
 		return Result{}, errors.New("fastloess: Finalize called on a closed StreamingLoess model")
 	}
-	cres := C.go_streaming_finalize(s.ptr)
+	cres := C.go_streaming_finalize(ptr)
 	runtime.KeepAlive(s)
 	return resultFromC(cres)
 }
@@ -273,10 +284,13 @@ func (s *StreamingLoess) Finalize() (Result, error) {
 // Close releases the native resources held by this model. Safe to call
 // multiple times.
 func (s *StreamingLoess) Close() error {
-	if s != nil && s.ptr != nil {
-		C.go_streaming_free(s.ptr)
-		s.ptr = nil
-		runtime.SetFinalizer(s, nil)
+	if s == nil {
+		return nil
 	}
+	closeNative(&s.ptr, func(p unsafe.Pointer) {
+		C.go_streaming_free((*C.fastloess_GoStreamingLoess)(p))
+	}, func() {
+		runtime.SetFinalizer(s, nil)
+	})
 	return nil
 }

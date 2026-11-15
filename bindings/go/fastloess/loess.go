@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"unsafe"
 )
 
 // CVOptions configures batch cross-validation. Nil disables grouped CV.
@@ -194,7 +195,7 @@ func optPtr(p *float64) (float64, bool) {
 // Loess is not safe for concurrent use; each goroutine should use its own
 // instance, or callers must serialize access.
 type Loess struct {
-	ptr *C.fastloess_GoLoess
+	ptr unsafe.Pointer // *C.fastloess_GoLoess
 }
 
 // NewLoess creates a new batch Loess model with the given options.
@@ -308,7 +309,8 @@ func NewLoess(opts Options) (*Loess, error) {
 		C.go_loess_set_cv_seed(ptr, C.ulonglong(*opts.Seed))
 	}
 
-	l := &Loess{ptr: ptr}
+	l := &Loess{}
+	storeNative(&l.ptr, unsafe.Pointer(ptr))
 	runtime.SetFinalizer(l, finalizeLoess)
 	return l, nil
 }
@@ -317,11 +319,19 @@ func finalizeLoess(l *Loess) {
 	_ = l.Close()
 }
 
+func (l *Loess) native() *C.fastloess_GoLoess {
+	if l == nil {
+		return nil
+	}
+	return (*C.fastloess_GoLoess)(loadNative(&l.ptr))
+}
+
 // Fit smooths y as a function of x. For multivariate input (Dimensions > 1),
 // x is flattened row-major (length len(y)*Dimensions). An optional
 // customWeights slice (same length as y) applies per-observation case weights.
 func (l *Loess) Fit(x, y []float64, customWeights ...[]float64) (Result, error) {
-	if l == nil || l.ptr == nil {
+	ptr := l.native()
+	if ptr == nil {
 		return Result{}, errors.New("fastloess: Fit called on a closed Loess model")
 	}
 	if len(x) == 0 || len(y) == 0 {
@@ -342,8 +352,9 @@ func (l *Loess) Fit(x, y []float64, customWeights ...[]float64) (Result, error) 
 	yPtr, yLen := cDoubles(y)
 	cwPtr, cwLen := cDoubles(cw)
 
-	cres := C.go_loess_fit(l.ptr, xPtr, xLen, yPtr, yLen, cwPtr, cwLen)
+	cres := C.go_loess_fit(ptr, xPtr, xLen, yPtr, yLen, cwPtr, cwLen)
 	runtime.KeepAlive(l)
+	keepAliveSlices(x, y, cw)
 	return resultFromC(cres)
 }
 
@@ -352,10 +363,13 @@ func (l *Loess) Fit(x, y []float64, customWeights ...[]float64) (Result, error) 
 // garbage collector if not called explicitly, but relying on that delays
 // releasing native memory - call Close explicitly (e.g. via defer) instead.
 func (l *Loess) Close() error {
-	if l != nil && l.ptr != nil {
-		C.go_loess_free(l.ptr)
-		l.ptr = nil
-		runtime.SetFinalizer(l, nil)
+	if l == nil {
+		return nil
 	}
+	closeNative(&l.ptr, func(p unsafe.Pointer) {
+		C.go_loess_free((*C.fastloess_GoLoess)(p))
+	}, func() {
+		runtime.SetFinalizer(l, nil)
+	})
 	return nil
 }

@@ -69,7 +69,8 @@ func optFloat(v float64, set bool) C.double {
 // and its length, suitable for passing to a `const double *, size_t`
 // FFI parameter pair. The backing array of a []float64 contains no Go
 // pointers, so passing its address across cgo is safe per the cgo pointer
-// passing rules.
+// passing rules. Callers must still runtime.KeepAlive the slice until the
+// cgo call returns.
 func cDoubles(xs []float64) (*C.double, C.size_t) {
 	if len(xs) == 0 {
 		return nil, 0
@@ -168,17 +169,17 @@ type Result struct {
 	PredictModel *PredictModel
 }
 
-func resultFromC(cres C.fastloess_GoLoessResult) (Result, error) {
+func resultFromC(cres C.fastloess_GoLoessResult) (result Result, err error) {
+	defer C.go_loess_free_result(&cres)
+
 	if cres.error != nil {
-		msg := C.GoString(cres.error)
-		C.go_loess_free_result(&cres)
-		return Result{}, errors.New(msg)
+		return Result{}, errors.New(C.GoString(cres.error))
 	}
 
 	n := int(cres.n)
 	cvN := int(cres.cv_scores_len)
 
-	r := Result{
+	result = Result{
 		X:                 cDoubleSliceToGo(cres.x, n),
 		Y:                 cDoubleSliceToGo(cres.y, n),
 		StandardErrors:    cDoubleSliceToGo(cres.standard_errors, n),
@@ -192,11 +193,11 @@ func resultFromC(cres C.fastloess_GoLoessResult) (Result, error) {
 		FractionUsed:      float64(cres.fraction_used),
 		IterationsUsed:    int(cres.iterations_used),
 		Dimensions:        int(cres.dimensions),
-		PredictModel:      predictModelFromC(cres.predict_handle),
+		PredictModel:      predictModelFromC(C.go_loess_take_predict_handle(&cres)),
 	}
 
 	if !math.IsNaN(float64(cres.rmse)) {
-		r.Diagnostics = &Diagnostics{
+		result.Diagnostics = &Diagnostics{
 			RMSE:        cDoubleOptional(cres.rmse),
 			MAE:         cDoubleOptional(cres.mae),
 			RSquared:    cDoubleOptional(cres.r_squared),
@@ -208,7 +209,7 @@ func resultFromC(cres C.fastloess_GoLoessResult) (Result, error) {
 	}
 
 	if !math.IsNaN(float64(cres.enp)) {
-		r.HatMatrix = &HatMatrixStats{
+		result.HatMatrix = &HatMatrixStats{
 			ENP:           float64(cres.enp),
 			TraceHat:      float64(cres.trace_hat),
 			Delta1:        float64(cres.delta1),
@@ -218,10 +219,9 @@ func resultFromC(cres C.fastloess_GoLoessResult) (Result, error) {
 		}
 	}
 
-	r.Gradient = cDoubleSliceToGo(cres.gradient, n*r.Dimensions)
+	result.Gradient = cDoubleSliceToGo(cres.gradient, n*result.Dimensions)
 
-	C.go_loess_free_result(&cres)
-	return r, nil
+	return result, nil
 }
 
 // PredictModel is the retained fitted-model state enabling out-of-sample Predict()
@@ -230,14 +230,15 @@ func resultFromC(cres C.fastloess_GoLoessResult) (Result, error) {
 // PredictModel is not safe for concurrent use; each goroutine should use its own
 // instance, or callers must serialize access.
 type PredictModel struct {
-	ptr *C.fastloess_GoPredictHandle
+	ptr unsafe.Pointer // *C.fastloess_GoPredictHandle
 }
 
 func predictModelFromC(handle *C.fastloess_GoPredictHandle) *PredictModel {
 	if handle == nil {
 		return nil
 	}
-	pm := &PredictModel{ptr: handle}
+	pm := &PredictModel{}
+	storeNative(&pm.ptr, unsafe.Pointer(handle))
 	runtime.SetFinalizer(pm, finalizePredictModel)
 	return pm
 }
@@ -250,11 +251,14 @@ func finalizePredictModel(pm *PredictModel) {
 // times. Relying on the garbage collector's finalizer instead delays releasing
 // native memory - call Close explicitly (e.g. via defer) when possible.
 func (pm *PredictModel) Close() error {
-	if pm != nil && pm.ptr != nil {
-		C.go_predict_handle_free(pm.ptr)
-		pm.ptr = nil
-		runtime.SetFinalizer(pm, nil)
+	if pm == nil {
+		return nil
 	}
+	closeNative(&pm.ptr, func(p unsafe.Pointer) {
+		C.go_predict_handle_free((*C.fastloess_GoPredictHandle)(p))
+	}, func() {
+		runtime.SetFinalizer(pm, nil)
+	})
 	return nil
 }
 
@@ -296,11 +300,15 @@ type PredictResult struct {
 // Predict evaluates the fitted model at out-of-sample query points not in the
 // training set (flattened, Dimensions values per point).
 func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictResult, error) {
+	if pm == nil {
+		return PredictResult{}, errors.New("fastloess: Predict called on a nil/closed PredictModel (was RetainModel set?)")
+	}
+	handle := (*C.fastloess_GoPredictHandle)(loadNative(&pm.ptr))
+	if handle == nil {
+		return PredictResult{}, errors.New("fastloess: Predict called on a nil/closed PredictModel (was RetainModel set?)")
+	}
 	if err := validateOutputs(opts.Outputs, "prediction", "se", "gradient", "derivative"); err != nil {
 		return PredictResult{}, err
-	}
-	if pm == nil || pm.ptr == nil {
-		return PredictResult{}, errors.New("fastloess: Predict called on a nil/closed PredictModel (was RetainModel set?)")
 	}
 	if len(newX) == 0 {
 		return PredictResult{}, errors.New("fastloess: newX must be non-empty")
@@ -315,7 +323,7 @@ func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictRes
 	newXPtr, newXLen := cDoubles(newX)
 
 	cres := C.go_predict(
-		pm.ptr,
+		handle,
 		newXPtr, newXLen,
 		boolToCInt(hasOutput(opts.Outputs, "se")),
 		optFloat(cl, clSet),
@@ -326,15 +334,16 @@ func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictRes
 		optFloat(maxNeighbor, maxNeighborSet),
 	)
 	runtime.KeepAlive(pm)
+	keepAliveSlices(newX)
+	defer C.go_predict_free_result(&cres)
+
 	if cres.error != nil {
-		msg := C.GoString(cres.error)
-		C.go_predict_free_result(&cres)
-		return PredictResult{}, errors.New(msg)
+		return PredictResult{}, errors.New(C.GoString(cres.error))
 	}
 
 	n := int(cres.n)
 	dims := int(cres.dimensions)
-	r := PredictResult{
+	return PredictResult{
 		Y:               cDoubleSliceToGo(cres.y, n),
 		StandardErrors:  cDoubleSliceToGo(cres.standard_errors, n),
 		ConfidenceLower: cDoubleSliceToGo(cres.confidence_lower, n),
@@ -342,9 +351,7 @@ func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictRes
 		PredictionLower: cDoubleSliceToGo(cres.prediction_lower, n),
 		PredictionUpper: cDoubleSliceToGo(cres.prediction_upper, n),
 		Derivative:      cDoubleSliceToGo(cres.derivative, n*dims),
-	}
-	C.go_predict_free_result(&cres)
-	return r, nil
+	}, nil
 }
 
 // PointResult is the outcome of OnlineLoess.AddPoint once the window has
@@ -366,4 +373,21 @@ type PointResult struct {
 	// Gradient is nil unless Outputs contains "gradient" or "derivative" (Dimensions values
 	// for the latest point; only populated when SurfaceMode is "direct").
 	Gradient []float64
+}
+
+// AddPointStatus describes the outcome of OnlineLoess.AddPoint and related methods.
+type AddPointStatus int
+
+const (
+	// AddPointFilling means the window still has fewer than MinPoints finite observations.
+	AddPointFilling AddPointStatus = iota
+	// AddPointReady means the returned PointResult is valid for the latest point.
+	AddPointReady
+	// AddPointDropped means the point was ignored under Missing = "drop".
+	AddPointDropped
+)
+
+// Ready reports whether AddPoint produced a smoothed PointResult.
+func (s AddPointStatus) Ready() bool {
+	return s == AddPointReady
 }

@@ -100,8 +100,10 @@ pub extern "C" fn go_last_error_message() -> *const c_char {
 }
 
 // Per-point result from an online update, passed across the FFI boundary.
-// has_value = 1 means the window is ready and smoothed is valid; 0 means the
-// window is still filling (caller should treat it as no output yet).
+// has_value:
+//   1  = window ready; smoothed fields are valid
+//   0  = window still filling (smoothed fields undefined)
+//  -1  = point dropped under missing="drop" (smoothed fields undefined)
 // Non-computed optional fields use f64::NAN (for floats) or -1 (for int).
 // error = NULL if no error, otherwise points to a null-terminated error string.
 #[repr(C)]
@@ -216,7 +218,10 @@ pub struct GoLoessResult {
     pub cv_scores_len: usize,
 
     /// Opaque handle for `go_predict()`, non-NULL only if `retain_model` was set to 1.
-    /// Must eventually be freed via `go_predict_handle_free`.
+    ///
+    /// Ownership: callers that keep the handle must call `go_loess_take_predict_handle`
+    /// before `go_loess_free_result`. Otherwise `go_loess_free_result` frees it.
+    /// Taken handles must eventually be freed via `go_predict_handle_free`.
     pub predict_handle: *mut GoPredictHandle,
 
     /// Error message (NULL if no error)
@@ -735,6 +740,8 @@ pub unsafe extern "C" fn go_predict(
 
 /// Free a GoPredictResult's heap-allocated buffers.
 ///
+/// Freed pointers are nulled so a second call is a no-op.
+///
 /// # Safety
 /// `result` must be a valid pointer to a GoPredictResult struct.
 #[unsafe(no_mangle)]
@@ -745,14 +752,24 @@ pub unsafe extern "C" fn go_predict_free_result(result: *mut GoPredictResult) {
         }
         let r = &mut *result;
         let n = r.n;
+        let deriv_n = n * r.dimensions.max(1) as usize;
         shared_parse::free_raw_f64_buffer(r.y, n);
+        r.y = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.standard_errors, n);
+        r.standard_errors = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.confidence_lower, n);
+        r.confidence_lower = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.confidence_upper, n);
+        r.confidence_upper = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.prediction_lower, n);
+        r.prediction_lower = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.prediction_upper, n);
-        shared_parse::free_raw_f64_buffer(r.derivative, n * r.dimensions.max(1) as usize);
+        r.prediction_upper = ptr::null_mut();
+        shared_parse::free_raw_f64_buffer(r.derivative, deriv_n);
+        r.derivative = ptr::null_mut();
+        r.n = 0;
         shared_parse::free_raw_c_string(r.error);
+        r.error = ptr::null_mut();
     });
 }
 
@@ -841,6 +858,11 @@ pub unsafe extern "C" fn go_streaming_new(
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
+        let iterations =
+            match shared_parse::require_non_negative_usize("iterations", iterations) {
+                Ok(v) => v,
+                Err(e) => return null_with_error(&e),
+            };
         let degree_str = (!degree.is_null()).then_some(shared_parse::parse_c_str_or_default(
             degree,
             shared_parse::DEFAULT_DEGREE,
@@ -862,7 +884,7 @@ pub unsafe extern "C" fn go_streaming_new(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
-                iterations: Some(iterations as usize),
+                iterations: Some(iterations),
                 weight_function: Some(wf_str),
                 robustness_method: Some(rm_str),
                 zero_weight_fallback: Some(zwf_str),
@@ -1096,6 +1118,11 @@ pub unsafe extern "C" fn go_online_new(
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
+        let iterations =
+            match shared_parse::require_non_negative_usize("iterations", iterations) {
+                Ok(v) => v,
+                Err(e) => return null_with_error(&e),
+            };
 
         let configured_dimensions = dimensions.max(1) as usize;
         let degree_str = (!degree.is_null()).then_some(shared_parse::parse_c_str_or_default(
@@ -1119,7 +1146,7 @@ pub unsafe extern "C" fn go_online_new(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
-                iterations: Some(iterations as usize),
+                iterations: Some(iterations),
                 weight_function: Some(wf_str),
                 robustness_method: Some(rm_str),
                 zero_weight_fallback: Some(zwf_str),
@@ -1194,11 +1221,16 @@ fn go_online_add_point_impl(
             return go_online_error_output(shared_parse::MODEL_POINTER_IS_NULL);
         }
         let loess = unsafe { &mut *ptr };
+        let dropped_candidate =
+            x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
 
         if let Some(model) = &mut loess.model {
             match model.add_point_weighted(x, y, weight) {
                 Err(e) => go_online_error_output(&e.to_string()),
-                Ok(None) => GoOnlineOutput::default(),
+                Ok(None) => GoOnlineOutput {
+                    has_value: if dropped_candidate { -1 } else { 0 },
+                    ..GoOnlineOutput::default()
+                },
                 Ok(Some(o)) => {
                     let (
                         standard_error,
@@ -1483,7 +1515,30 @@ pub unsafe extern "C" fn go_online_free(ptr: *mut GoOnlineLoess) {
     });
 }
 
+/// Take ownership of `predict_handle`, nulling it in `result` so
+/// `go_loess_free_result` will not free it. The returned pointer must be freed
+/// with `go_predict_handle_free` (or transferred into a Go `PredictModel`).
+///
+/// # Safety
+/// `result` must be a valid pointer to a `GoLoessResult`, or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn go_loess_take_predict_handle(
+    result: *mut GoLoessResult,
+) -> *mut GoPredictHandle {
+    if result.is_null() {
+        return ptr::null_mut();
+    }
+    let res = &mut *result;
+    let handle = res.predict_handle;
+    res.predict_handle = ptr::null_mut();
+    handle
+}
+
 /// Free a GoLoessResult.
+///
+/// Also frees `predict_handle` if it is still non-null. Callers that keep the
+/// handle must call `go_loess_take_predict_handle` first. Freed pointers are
+/// nulled so a second call is a no-op.
 ///
 /// # Safety
 /// `result` must be a valid pointer to a GoLoessResult struct.
@@ -1497,20 +1552,40 @@ pub unsafe extern "C" fn go_loess_free_result(result: *mut GoLoessResult) {
         let r = &mut *result;
         let n = r.n;
         let cv_n = r.cv_scores_len;
+        let grad_n = n * r.dimensions.max(1) as usize;
 
         shared_parse::free_raw_f64_buffer(r.x, n);
+        r.x = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.y, n);
+        r.y = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.standard_errors, n);
+        r.standard_errors = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.confidence_lower, n);
+        r.confidence_lower = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.confidence_upper, n);
+        r.confidence_upper = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.prediction_lower, n);
+        r.prediction_lower = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.prediction_upper, n);
+        r.prediction_upper = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.residuals, n);
+        r.residuals = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.robustness_weights, n);
-        shared_parse::free_raw_f64_buffer(r.gradient, n * r.dimensions.max(1) as usize);
+        r.robustness_weights = ptr::null_mut();
+        shared_parse::free_raw_f64_buffer(r.gradient, grad_n);
+        r.gradient = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.leverage, n);
+        r.leverage = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.cv_scores, cv_n);
+        r.cv_scores = ptr::null_mut();
+        r.cv_scores_len = 0;
+        r.n = 0;
+        if !r.predict_handle.is_null() {
+            let _ = Box::from_raw(r.predict_handle);
+            r.predict_handle = ptr::null_mut();
+        }
         shared_parse::free_raw_c_string(r.error);
+        r.error = ptr::null_mut();
     });
 }
 

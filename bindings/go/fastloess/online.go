@@ -8,6 +8,7 @@ import "C"
 import (
 	"errors"
 	"runtime"
+	"unsafe"
 )
 
 // OnlineOptions configures an OnlineLoess model. Cross-validation,
@@ -41,8 +42,7 @@ type OnlineOptions struct {
 	ZeroWeightFallback string
 	// Missing controls how a non-finite (NaN/Inf) x or y value passed to
 	// AddPoint is handled: "error" (default) returns an error, "drop"
-	// silently ignores the point (ok is false) instead of adding it to the
-	// window.
+	// ignores the point and returns AddPointDropped.
 	Missing string
 
 	// Degree is the local polynomial degree: "constant", "linear" (default),
@@ -122,7 +122,7 @@ func DefaultOnlineOptions() OnlineOptions {
 //
 // OnlineLoess is not safe for concurrent use.
 type OnlineLoess struct {
-	ptr *C.fastloess_GoOnlineLoess
+	ptr unsafe.Pointer // *C.fastloess_GoOnlineLoess
 }
 
 // NewOnlineLoess creates a new online model with the given options.
@@ -211,7 +211,8 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 		return nil, errors.New(errMsg)
 	}
 
-	o := &OnlineLoess{ptr: ptr}
+	o := &OnlineLoess{}
+	storeNative(&o.ptr, unsafe.Pointer(ptr))
 	runtime.SetFinalizer(o, finalizeOnline)
 	return o, nil
 }
@@ -220,45 +221,59 @@ func finalizeOnline(o *OnlineLoess) {
 	_ = o.Close()
 }
 
+func (o *OnlineLoess) native() *C.fastloess_GoOnlineLoess {
+	if o == nil {
+		return nil
+	}
+	return (*C.fastloess_GoOnlineLoess)(loadNative(&o.ptr))
+}
+
 // AddPoint adds a one-dimensional (x, y) observation. Use AddPointVector for
-// multivariate coordinates. ok is false while the window is still filling.
-func (o *OnlineLoess) AddPoint(x, y float64) (PointResult, bool, error) {
+// multivariate coordinates.
+//
+// Status is AddPointFilling while fewer than MinPoints finite observations have
+// been seen, AddPointReady once smoothing begins (res is valid), and
+// AddPointDropped when Missing = "drop" ignores a non-finite point.
+func (o *OnlineLoess) AddPoint(x, y float64) (PointResult, AddPointStatus, error) {
 	return o.AddPointWeighted(x, y, 1.0)
 }
 
 // AddPointWeighted adds a scalar observation with a finite, non-negative case weight.
-func (o *OnlineLoess) AddPointWeighted(x, y, weight float64) (PointResult, bool, error) {
+func (o *OnlineLoess) AddPointWeighted(x, y, weight float64) (PointResult, AddPointStatus, error) {
 	return o.addPointVectorWeighted([]float64{x}, y, weight)
 }
 
 // AddPointVector adds one observation with one x coordinate per configured
-// predictor dimension. ok is false while the window is still filling.
-func (o *OnlineLoess) AddPointVector(x []float64, y float64) (res PointResult, ok bool, err error) {
+// predictor dimension.
+func (o *OnlineLoess) AddPointVector(x []float64, y float64) (res PointResult, status AddPointStatus, err error) {
 	return o.AddPointVectorWeighted(x, y, 1.0)
 }
 
-// AddPointVectorWeighted adds one coordinate vector and case weight. ok is
-// false while the window is still filling.
-func (o *OnlineLoess) AddPointVectorWeighted(x []float64, y, weight float64) (res PointResult, ok bool, err error) {
+// AddPointVectorWeighted adds one coordinate vector and case weight.
+func (o *OnlineLoess) AddPointVectorWeighted(x []float64, y, weight float64) (res PointResult, status AddPointStatus, err error) {
 	return o.addPointVectorWeighted(x, y, weight)
 }
 
-func (o *OnlineLoess) addPointVectorWeighted(x []float64, y, weight float64) (res PointResult, ok bool, err error) {
-	if o == nil || o.ptr == nil {
-		return PointResult{}, false, errors.New("fastloess: AddPoint called on a closed OnlineLoess model")
+func (o *OnlineLoess) addPointVectorWeighted(x []float64, y, weight float64) (res PointResult, status AddPointStatus, err error) {
+	ptr := o.native()
+	if ptr == nil {
+		return PointResult{}, AddPointFilling, errors.New("fastloess: AddPoint called on a closed OnlineLoess model")
 	}
 
 	xPtr, xLen := cDoubles(x)
-	cout := C.go_online_add_point_vector_weighted(o.ptr, xPtr, xLen, C.double(y), C.double(weight))
+	cout := C.go_online_add_point_vector_weighted(ptr, xPtr, xLen, C.double(y), C.double(weight))
 	runtime.KeepAlive(o)
-	runtime.KeepAlive(x)
+	keepAliveSlices(x)
+	defer C.go_online_free_output(&cout)
+
 	if cout.error != nil {
-		msg := C.GoString(cout.error)
-		C.go_online_free_output(&cout)
-		return PointResult{}, false, errors.New(msg)
+		return PointResult{}, AddPointFilling, errors.New(C.GoString(cout.error))
 	}
 	if cout.has_value == 0 {
-		return PointResult{}, false, nil
+		return PointResult{}, AddPointFilling, nil
+	}
+	if cout.has_value < 0 {
+		return PointResult{}, AddPointDropped, nil
 	}
 
 	res = PointResult{
@@ -273,24 +288,22 @@ func (o *OnlineLoess) addPointVectorWeighted(x []float64, y, weight float64) (re
 		PredictionUpper:  float64(cout.prediction_upper),
 		Gradient:         cDoubleSliceToGo(cout.gradient, int(cout.dimensions)),
 	}
-	C.go_online_free_output(&cout)
-	return res, true, nil
+	return res, AddPointReady, nil
 }
 
 // WindowDiagnostics computes fit diagnostics for the current sliding window.
 // It returns nil, nil until the window reaches MinPoints.
 func (o *OnlineLoess) WindowDiagnostics() (*Diagnostics, error) {
-	if o == nil || o.ptr == nil {
+	ptr := o.native()
+	if ptr == nil {
 		return nil, errors.New("fastloess: WindowDiagnostics called on a closed OnlineLoess model")
 	}
-	result := C.go_online_window_diagnostics(o.ptr)
+	result := C.go_online_window_diagnostics(ptr)
 	runtime.KeepAlive(o)
-	if result.error != nil {
-		msg := C.GoString(result.error)
-		C.go_online_free_diagnostics(&result)
-		return nil, errors.New(msg)
-	}
 	defer C.go_online_free_diagnostics(&result)
+	if result.error != nil {
+		return nil, errors.New(C.GoString(result.error))
+	}
 	if result.has_value == 0 {
 		return nil, nil
 	}
@@ -310,7 +323,8 @@ func (o *OnlineLoess) PredictWindow(newX []float64, opts PredictOptions) (Predic
 	if err := validateOutputs(opts.Outputs, "prediction", "se", "gradient", "derivative"); err != nil {
 		return PredictResult{}, err
 	}
-	if o == nil || o.ptr == nil {
+	ptr := o.native()
+	if ptr == nil {
 		return PredictResult{}, errors.New("fastloess: PredictWindow called on a closed OnlineLoess model")
 	}
 	if len(newX) == 0 {
@@ -323,7 +337,7 @@ func (o *OnlineLoess) PredictWindow(newX []float64, opts PredictOptions) (Predic
 	maxNeighbor, maxNeighborSet := optPtr(opts.MaxNeighborDistance)
 	newXPtr, newXLen := cDoubles(newX)
 	result := C.go_online_predict_window(
-		o.ptr,
+		ptr,
 		newXPtr,
 		newXLen,
 		boolToCInt(hasOutput(opts.Outputs, "se")),
@@ -335,13 +349,11 @@ func (o *OnlineLoess) PredictWindow(newX []float64, opts PredictOptions) (Predic
 		optFloat(maxNeighbor, maxNeighborSet),
 	)
 	runtime.KeepAlive(o)
-	runtime.KeepAlive(newX)
-	if result.error != nil {
-		msg := C.GoString(result.error)
-		C.go_predict_free_result(&result)
-		return PredictResult{}, errors.New(msg)
-	}
+	keepAliveSlices(newX)
 	defer C.go_predict_free_result(&result)
+	if result.error != nil {
+		return PredictResult{}, errors.New(C.GoString(result.error))
+	}
 	n := int(result.n)
 	dimensions := int(result.dimensions)
 	return PredictResult{
@@ -358,10 +370,13 @@ func (o *OnlineLoess) PredictWindow(newX []float64, opts PredictOptions) (Predic
 // Close releases the native resources held by this model. Safe to call
 // multiple times.
 func (o *OnlineLoess) Close() error {
-	if o != nil && o.ptr != nil {
-		C.go_online_free(o.ptr)
-		o.ptr = nil
-		runtime.SetFinalizer(o, nil)
+	if o == nil {
+		return nil
 	}
+	closeNative(&o.ptr, func(p unsafe.Pointer) {
+		C.go_online_free((*C.fastloess_GoOnlineLoess)(p))
+	}, func() {
+		runtime.SetFinalizer(o, nil)
+	})
 	return nil
 }

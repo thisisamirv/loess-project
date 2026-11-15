@@ -63,9 +63,19 @@ Cross-validation, the `sorted` and `diagnostics` outputs, and `Parallel` are Bat
 
 ## `fastloess.NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error)`
 
-## `(*OnlineLoess) AddPoint(x, y float64) (res PointResult, ok bool, err error)`
+## `(*OnlineLoess) AddPoint(x, y float64) (res PointResult, status AddPointStatus, err error)`
 
-Adds a single observation. `ok` is `false` while the window is still filling (fewer than `MinPoints` seen so far); once `ok` is `true`, `res` holds the smoothed value for the most recently added point. Once the window reaches `WindowCapacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `UpdateMode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
+Adds a single observation. `status` is `AddPointFilling` while the window is warming up (fewer than `MinPoints` finite observations), `AddPointReady` once smoothing begins (`res` is valid), and `AddPointDropped` when `Missing = "drop"` ignores a non-finite point. Once the window reaches `WindowCapacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `UpdateMode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
+
+```go
+res, status, err := model.AddPoint(x, y)
+if err != nil {
+ panic(err)
+}
+if status.Ready() {
+ fmt.Println(res.Y)
+}
+```
 
 ## `(*OnlineLoess) Close() error`
 
@@ -224,7 +234,7 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `AddPoint`
 | Option | Behavior |
 | --- | --- |
 | `"error"` (default) | Return an error |
-| `"drop"` | Silently ignore the point — `AddPoint` returns `ok == false` instead of adding it to the window |
+| `"drop"` | Ignore the point — `AddPoint` returns `AddPointDropped` instead of adding it to the window |
 
 ### WindowCapacity
 
@@ -232,7 +242,7 @@ Maximum number of most recent points kept in the sliding window; older points ar
 
 ### MinPoints
 
-Minimum number of points required before `AddPoint` starts returning `ok == true`.
+Minimum number of points required before smoothing starts. `AddPoint` returns `AddPointFilling` until the window reaches this size.
 
 ### UpdateMode
 
@@ -317,23 +327,23 @@ func main() {
  }
  defer model.Close()
 
- _, ok1, err := model.AddPoint(x[0], y[0])
+ _, status1, err := model.AddPoint(x[0], y[0])
  if err != nil {
   log.Fatal(err)
  }
- fmt.Println(ok1)
+ fmt.Println(status1.Ready())
 
- _, ok2, err := model.AddPoint(x[1], y[1])
+ _, status2, err := model.AddPoint(x[1], y[1])
  if err != nil {
   log.Fatal(err)
  }
- fmt.Println(ok2)
+ fmt.Println(status2.Ready())
 
- res, ok3, err := model.AddPoint(x[2], y[2])
+ res, status3, err := model.AddPoint(x[2], y[2])
  if err != nil {
   log.Fatal(err)
  }
- if ok3 {
+ if status3.Ready() {
   fmt.Println(res.Y)
  }
 }

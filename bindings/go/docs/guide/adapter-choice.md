@@ -166,11 +166,11 @@ defer model.Close()
 
 shown := 0
 for i := range x {
-    res, ok, err := model.AddPoint(x[i], y[i])
+    res, status, err := model.AddPoint(x[i], y[i])
     if err != nil {
         log.Fatal(err)
     }
-    if ok && shown < 5 {
+    if status.Ready() && shown < 5 {
         fmt.Println(res.Y)
         shown++
     }

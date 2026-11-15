@@ -95,7 +95,10 @@ typedef struct fastloess_GoLoessResult {
   size_t cv_scores_len;
   /**
    * Opaque handle for `go_predict()`, non-NULL only if `retain_model` was set to 1.
-   * Must eventually be freed via `go_predict_handle_free`.
+   *
+   * Ownership: callers that keep the handle must call `go_loess_take_predict_handle`
+   * before `go_loess_free_result`. Otherwise `go_loess_free_result` frees it.
+   * Taken handles must eventually be freed via `go_predict_handle_free`.
    */
   struct fastloess_GoPredictHandle *predict_handle;
   /**
@@ -293,6 +296,8 @@ struct fastloess_GoPredictResult go_predict(struct fastloess_GoPredictHandle *ha
 
 /**
  * Free a GoPredictResult's heap-allocated buffers.
+ *
+ * Freed pointers are nulled so a second call is a no-op.
  *
  * # Safety
  * `result` must be a valid pointer to a GoPredictResult struct.
@@ -517,7 +522,21 @@ void go_online_free_output(struct fastloess_GoOnlineOutput *output);
 void go_online_free(struct fastloess_GoOnlineLoess *ptr);
 
 /**
+ * Take ownership of `predict_handle`, nulling it in `result` so
+ * `go_loess_free_result` will not free it. The returned pointer must be freed
+ * with `go_predict_handle_free` (or transferred into a Go `PredictModel`).
+ *
+ * # Safety
+ * `result` must be a valid pointer to a `GoLoessResult`, or null.
+ */
+struct fastloess_GoPredictHandle *go_loess_take_predict_handle(struct fastloess_GoLoessResult *result);
+
+/**
  * Free a GoLoessResult.
+ *
+ * Also frees `predict_handle` if it is still non-null. Callers that keep the
+ * handle must call `go_loess_take_predict_handle` first. Freed pointers are
+ * nulled so a second call is a no-op.
  *
  * # Safety
  * `result` must be a valid pointer to a GoLoessResult struct.
