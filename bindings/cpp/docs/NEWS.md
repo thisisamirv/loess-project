@@ -13,6 +13,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Extend/Zero boundary pads use unit spacing when leading/trailing predictor ties would otherwise stack pads.
 * Fixed retained-model `predict_handle` ownership documentation and take API (`fastloess_loess_take_predict_handle`) so C consumers can transfer handles before `free_result`.
 
 ## 3.0.0

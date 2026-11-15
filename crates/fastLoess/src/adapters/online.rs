@@ -16,7 +16,8 @@ use std::result::Result;
 // Export dependencies from loess-rs crate
 use crate::adapters::apply_weighted_metric_weights;
 use loess_rs::PredictOutput;
-use loess_rs::internals::adapters::online::{OnlineLoessBuilder, OnlineOutput};
+use loess_rs::internals::adapters::online::OnlineLoessBuilder;
+pub use loess_rs::internals::adapters::online::AddPointResult;
 use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
 use loess_rs::internals::engine::executor::PredictQuery;
 use loess_rs::internals::evaluation::diagnostics::Diagnostics;
@@ -93,7 +94,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
     ParallelOnlineLoess<T>
 {
     // Add a new point and get its smoothed value.
-    pub fn add_point(&mut self, x: &[T], y: T) -> Result<Option<OnlineOutput<T>>, LoessError> {
+    pub fn add_point(&mut self, x: &[T], y: T) -> Result<AddPointResult<T>, LoessError> {
         self.processor.add_point(x, y)
     }
 
@@ -103,7 +104,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
         x: &[T],
         y: T,
         weight: T,
-    ) -> Result<Option<OnlineOutput<T>>, LoessError> {
+    ) -> Result<AddPointResult<T>, LoessError> {
         self.processor.add_point_weighted(x, y, weight)
     }
 

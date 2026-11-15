@@ -11,6 +11,7 @@ This changelog includes end-user changes only. For internal development notes, s
 === Fixed
 
 * Distinguishing Online `addPoint` filling vs `missing="drop"` via `OnlinePointStatus` / `AddPointResult`.
+* Extend/Zero boundary pads use unit spacing when leading/trailing predictor ties would otherwise stack pads.
 * Closing retained `PredictModel` handles through `Result` (`AutoCloseable`) with take-once ownership and a `Cleaner` safety net on native-owning types.
 * Validating flattened `x` length (`y.length * dimensions`) and `customWeights` against `y` before JNI.
 

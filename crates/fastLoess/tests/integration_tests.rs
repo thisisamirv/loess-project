@@ -207,16 +207,16 @@ fn test_online_adapter() {
 
     // 1st point (not enough)
     let out1 = processor.add_point(&[1.0], 2.0).unwrap();
-    assert!(out1.is_none());
+    assert!(out1.is_filling());
 
     // 2nd point (not enough)
     let out2 = processor.add_point(&[2.0], 4.0).unwrap();
-    assert!(out2.is_none());
+    assert!(out2.is_filling());
 
     // 3rd point (enough!)
     let out3 = processor.add_point(&[3.0], 6.0).unwrap();
-    assert!(out3.is_some());
-    let val = out3.unwrap();
+    assert!(out3.is_ready());
+    let val = out3.ready().unwrap();
     assert_abs_diff_eq!(val.y, 6.0, epsilon = 0.1);
 }
 
@@ -236,7 +236,8 @@ fn test_online_adapter_return_gradient() {
     for i in 0..6 {
         last = processor
             .add_point(&[i as f64], 2.0 * i as f64 + 1.0)
-            .unwrap();
+            .unwrap()
+            .ready();
     }
     assert_abs_diff_eq!(last.unwrap().gradient.unwrap()[0], 2.0, epsilon = 1e-9);
 }
@@ -257,7 +258,7 @@ fn test_online_adapter_multivariate_points() {
     let points = [([0.0, 0.0], 0.0), ([1.0, 0.0], 1.0), ([0.0, 1.0], 2.0)];
     let mut output = None;
     for (x, y) in points {
-        output = processor.add_point(&x, y).unwrap();
+        output = processor.add_point(&x, y).unwrap().ready();
     }
     assert_eq!(output.unwrap().gradient.unwrap().len(), 2);
 }
@@ -584,7 +585,8 @@ fn test_online_adapter_confidence_and_prediction_intervals_full_mode() {
     for i in 0..6 {
         last = processor
             .add_point(&[i as f64], 2.0 * i as f64 + 1.0)
-            .unwrap();
+            .unwrap()
+            .ready();
     }
 
     let out = last.unwrap();

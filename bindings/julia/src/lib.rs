@@ -303,7 +303,7 @@ fn loess_result_to_jl(mut result: LoessResult<f64>) -> JlLoessResult {
 // Stateful Structs (Opaque to C)
 // ============================================================================
 
-use fastLoess::internals::adapters::online::ParallelOnlineLoess;
+use fastLoess::internals::adapters::online::{AddPointResult, ParallelOnlineLoess};
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 
 pub struct JlLoessConfig {
@@ -1374,18 +1374,21 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
         }
         let processor = unsafe { &mut *ptr };
         let coordinates = unsafe { from_raw_parts(x, x_n) };
-        let dropped_candidate = coordinates.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
 
         match processor.inner.add_point_weighted(coordinates, y, weight) {
             Err(e) => JlOnlineOutput {
                 error: shared_parse::into_raw_error_c_string(&e.to_string()),
                 ..JlOnlineOutput::default()
             },
-            Ok(None) => JlOnlineOutput {
-                has_value: if dropped_candidate { -1 } else { 0 },
+            Ok(AddPointResult::Dropped) => JlOnlineOutput {
+                has_value: -1,
                 ..JlOnlineOutput::default()
             },
-            Ok(Some(o)) => {
+            Ok(AddPointResult::Filling) => JlOnlineOutput {
+                has_value: 0,
+                ..JlOnlineOutput::default()
+            },
+            Ok(AddPointResult::Ready(o)) => {
                 let (
                     standard_error,
                     residual,

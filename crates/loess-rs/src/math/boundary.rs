@@ -22,6 +22,18 @@ use num_traits::Float;
 // Policy for handling boundaries at the start and end of a data stream.
 use crate::primitives::policies::BoundaryPolicy;
 
+// Spacing used for Extend/Zero pads. Tied edge x-values would otherwise stack
+// every pad at the same coordinate; fall back to unit spacing so pads stay ordered.
+#[inline]
+fn edge_spacing<T: Float>(inner: T, outer: T) -> T {
+    let dx = outer - inner;
+    if dx == T::zero() {
+        T::one()
+    } else {
+        dx
+    }
+}
+
 impl BoundaryPolicy {
     // Apply the boundary policy to pad input data (1D or nD).
     //
@@ -63,7 +75,7 @@ impl BoundaryPolicy {
                 BoundaryPolicy::Extend => {
                     let x0 = x[order[0]];
                     let y0 = y[order[0]];
-                    let dx = x[order[1]] - x0;
+                    let dx = edge_spacing(x0, x[order[1]]);
                     for i in (1..=pad_len).rev() {
                         px.push(x0 - T::from(i).unwrap() * dx);
                         py.push(y0);
@@ -79,7 +91,7 @@ impl BoundaryPolicy {
                 }
                 BoundaryPolicy::Zero => {
                     let x0 = x[order[0]];
-                    let dx = x[order[1]] - x0;
+                    let dx = edge_spacing(x0, x[order[1]]);
                     for i in (1..=pad_len).rev() {
                         px.push(x0 - T::from(i).unwrap() * dx);
                         py.push(T::zero());
@@ -97,7 +109,7 @@ impl BoundaryPolicy {
                 BoundaryPolicy::Extend => {
                     let xn = x[order[n - 1]];
                     let yn = y[order[n - 1]];
-                    let dx = xn - x[order[n - 2]];
+                    let dx = edge_spacing(x[order[n - 2]], xn);
                     for i in 1..=pad_len {
                         px.push(xn + T::from(i).unwrap() * dx);
                         py.push(yn);
@@ -113,7 +125,7 @@ impl BoundaryPolicy {
                 }
                 BoundaryPolicy::Zero => {
                     let xn = x[order[n - 1]];
-                    let dx = xn - x[order[n - 2]];
+                    let dx = edge_spacing(x[order[n - 2]], xn);
                     for i in 1..=pad_len {
                         px.push(xn + T::from(i).unwrap() * dx);
                         py.push(T::zero());

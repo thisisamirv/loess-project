@@ -12,7 +12,7 @@
 // methods still work identically; this binding uses them for brevity.
 #![allow(deprecated)]
 
-use fastLoess::internals::adapters::online::ParallelOnlineLoess;
+use fastLoess::internals::adapters::online::{AddPointResult, ParallelOnlineLoess};
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use fastLoess::internals::api::LoessBuilder;
 use fastLoess::internals::binding_support as shared_parse;
@@ -862,7 +862,6 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
         let online = unsafe { &mut *(handle as *mut JavaOnlineLoess) };
         let x_vec = jarray_to_vec(env, &x)?;
         // Match C++: only x coords + y; weight finiteness is not part of dropped_candidate.
-        let dropped_candidate = x_vec.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
         let point = online
             .model
             .add_point_weighted(&x_vec, y, weight)
@@ -881,8 +880,8 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
             prediction_upper,
             gradient,
         ) = match point {
-            None => (
-                if dropped_candidate { -1 } else { 0 },
+            AddPointResult::Dropped => (
+                -1,
                 f64::NAN,
                 f64::NAN,
                 f64::NAN,
@@ -894,7 +893,20 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
                 f64::NAN,
                 None,
             ),
-            Some(o) => {
+            AddPointResult::Filling => (
+                0,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                -1,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                None,
+            ),
+            AddPointResult::Ready(o) => {
                 let (se, res, rw, iters, cl, cu, pl, pu) = shared_parse::extract_online_output(&o);
                 (
                     1,

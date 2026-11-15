@@ -15,6 +15,7 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Fixed
 
 * Distinguishing Online `add_point` filling vs `missing="drop"` via ternary `status`.
+* Extend/Zero boundary pads use unit spacing when leading/trailing predictor ties would otherwise stack pads.
 * Adding idempotent `close()` (and `Symbol.dispose`) on `OnlineLoess`, `StreamingLoess`, and `LoessResult` (clears retained predict state).
 * Aligning `fit_async` custom-weights with sync `fit`, and categorizing Online errors via `map_loess_result`.
 

@@ -283,6 +283,53 @@ pub struct OnlineOutput<T> {
     pub gradient: Option<Vec<T>>,
 }
 
+/// Outcome of [`OnlineLoess::add_point`] / [`OnlineLoess::add_point_weighted`].
+///
+/// Distinguishes a still-warming window from a point ignored under
+/// [`MissingPolicy::Drop`], which both previously collapsed to `None`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum AddPointResult<T> {
+    /// Fewer than `min_points` finite observations are in the window yet.
+    Filling,
+    /// The point was ignored under `MissingPolicy::Drop`.
+    Dropped,
+    /// Smoothed estimate for the newly accepted point.
+    Ready(OnlineOutput<T>),
+}
+
+impl<T> AddPointResult<T> {
+    /// Returns a reference to the ready output, if any.
+    pub fn as_ready(&self) -> Option<&OnlineOutput<T>> {
+        match self {
+            Self::Ready(output) => Some(output),
+            _ => None,
+        }
+    }
+
+    /// Consumes `self` and returns the ready output, if any.
+    pub fn ready(self) -> Option<OnlineOutput<T>> {
+        match self {
+            Self::Ready(output) => Some(output),
+            _ => None,
+        }
+    }
+
+    /// `true` when a smoothed estimate is available.
+    pub fn is_ready(&self) -> bool {
+        matches!(self, Self::Ready(_))
+    }
+
+    /// `true` while the window is still filling.
+    pub fn is_filling(&self) -> bool {
+        matches!(self, Self::Filling)
+    }
+
+    /// `true` when the point was dropped under `missing = "drop"`.
+    pub fn is_dropped(&self) -> bool {
+        matches!(self, Self::Dropped)
+    }
+}
+
 // Online LOESS processor for streaming data.
 pub struct OnlineLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     config: OnlineLoessBuilder<T>,
@@ -299,7 +346,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     OnlineLoess<T>
 {
     // Add a new point and get its smoothed value.
-    pub fn add_point(&mut self, x: &[T], y: T) -> Result<Option<OnlineOutput<T>>, LoessError> {
+    pub fn add_point(&mut self, x: &[T], y: T) -> Result<AddPointResult<T>, LoessError> {
         self.add_point_weighted(x, y, T::one())
     }
 
@@ -312,7 +359,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         x: &[T],
         y: T,
         weight: T,
-    ) -> Result<Option<OnlineOutput<T>>, LoessError> {
+    ) -> Result<AddPointResult<T>, LoessError> {
         // Validate new point
         let dimensions = self.config.dimensions;
         if x.len() != dimensions {
@@ -332,7 +379,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             }
             MissingPolicy::Drop => {
                 if x.iter().any(|xi| !xi.is_finite()) || !y.is_finite() {
-                    return Ok(None);
+                    return Ok(AddPointResult::Dropped);
                 }
             }
         }
@@ -355,7 +402,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 
         // Check if we have enough points
         if self.window_y.len() < self.config.min_points {
-            return Ok(None);
+            return Ok(AddPointResult::Filling);
         }
 
         // Convert window to vectors for smoothing using scratch buffers
@@ -385,7 +432,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 
             let residual = y - smoothed;
 
-            return Ok(Some(OnlineOutput {
+            return Ok(AddPointResult::Ready(OnlineOutput {
                 y: smoothed,
                 standard_error: None,
                 residual: Some(residual),
@@ -639,7 +686,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 
         let (confidence_lower, confidence_upper, prediction_lower, prediction_upper) = ci_bounds;
 
-        Ok(Some(OnlineOutput {
+        Ok(AddPointResult::Ready(OnlineOutput {
             y: smoothed,
             standard_error: std_err,
             residual: Some(residual),

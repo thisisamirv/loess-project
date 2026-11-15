@@ -416,7 +416,7 @@
 //! let mut updates = 0;
 //! let mut latest = None;
 //! for (&xi, &yi) in x.iter().zip(&y) {
-//!     if let Some(output) = model.add_point(&[xi], yi)? {
+//!     if let Some(output) = model.add_point(&[xi], yi)?.ready() {
 //!         updates += 1;
 //!         latest = Some(output.y);
 //!     }
@@ -479,7 +479,7 @@
 //! let mut updates = 0;
 //! for i in 0..12 {
 //!     let x = i as f64 * 0.2;
-//!     if let Some(output) = model.add_point(&[x], x.sin() + 0.1 * (5.0 * x).sin())? {
+//!     if let Some(output) = model.add_point(&[x], x.sin() + 0.1 * (5.0 * x).sin())?.ready() {
 //!         updates += 1;
 //!         assert!(output.standard_error.is_some());
 //!         assert!(output.confidence_lower.is_some());
@@ -499,7 +499,7 @@
 //!
 //! ### Result and Error Handling
 //!
-//! `build()` and `add_point(&[coordinate], response)` return `Result`; `add_point(&[coordinate], response)` returns `None` until
+//! `build()` and `add_point(&[coordinate], response)` return `Result`; `add_point(&[coordinate], response)` returns `Filling` until
 //! `min_points` is reached. Invalid configurations and non-finite points return errors:
 //!
 //! ```rust
@@ -514,7 +514,7 @@
 //! assert!(model.add_point(&[f64::NAN], 2.0).is_err());
 //! let mut ready = 0;
 //! for i in 1..=3 {
-//!     if model.add_point(&[i as f64], 2.0 * i as f64)?.is_some() {
+//!     if model.add_point(&[i as f64], 2.0 * i as f64)?.is_ready() {
 //!         ready += 1;
 //!     }
 //! }
@@ -539,7 +539,7 @@
 //! let mut model = OnlineLoess::new().window_capacity(5).min_points(3).build()?;
 //! let mut ready = 0;
 //! for (&xi, &yi) in x.iter().zip(y.iter()) {
-//!     if model.add_point(&[xi], yi)?.is_some() {
+//!     if model.add_point(&[xi], yi)?.is_ready() {
 //!         ready += 1;
 //!     }
 //! }

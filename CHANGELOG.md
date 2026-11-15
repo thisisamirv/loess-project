@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Rust:**
 
+- Breaking change: `OnlineLoess::add_point` returns `AddPointResult` (`Filling` / `Ready` / `Dropped`) instead of `Option<OnlineOutput>`.
 - Bumped the KaTeX CDN assets in the `loess-rs` and `fastLoess` docs headers from `0.19.0` to `0.19.1` and refreshed their SRI hashes.
 - Bumped `napi` to v3.16 and `napi-derive` to v3.7.
 
@@ -55,6 +56,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped `astrojs/markdown-remark` to v7.3.9, `astrojs/starlight` to v0.43.1, `astro` to v7.4.12, `katex` to v0.19.1, `oxlint` to v1.93.0, and `typedoc-plugin-markdown` to v4.14.1.
 
 ### Fixed
+
+**Rust:**
+
+- Distinguish Online `missing="drop"` from a still-filling window via `AddPointResult` at the crate API (bindings no longer infer status from `None`).
+- Use unit edge spacing for Extend/Zero boundary pads when leading/trailing `x` ties would otherwise stack pads.
 
 **Monorepo:**
 

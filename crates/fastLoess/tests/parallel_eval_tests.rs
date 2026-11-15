@@ -209,7 +209,7 @@ fn test_grouped_intervals_streaming_online_and_validation() {
         .unwrap();
     let mut latest = None;
     for (&point, &response) in x.iter().zip(&y) {
-        latest = online.add_point(&[point], response).unwrap();
+        latest = online.add_point(&[point], response).unwrap().ready();
     }
     assert!(latest.unwrap().standard_error.is_some());
     assert!(matches!(

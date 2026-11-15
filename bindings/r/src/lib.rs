@@ -12,6 +12,7 @@ use std::cell::RefCell;
 use std::sync::Arc;
 
 use fastLoess::internals::api::{LoessBuilder, LoessResult};
+use fastLoess::internals::adapters::online::AddPointResult;
 use fastLoess::internals::binding_support as shared_parse;
 use fastLoess::prelude::{IntervalsBuilder, Predict};
 
@@ -562,7 +563,6 @@ impl ROnlineLoess {
     }
 
     fn add_point_weighted(&mut self, x: Vec<f64>, y: f64, weight: f64) -> Result<List> {
-        let dropped_candidate = x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
         let model = self
             .inner
             .as_mut()
@@ -570,7 +570,7 @@ impl ROnlineLoess {
         let output = map_loess_err(model.add_point_weighted(&x, y, weight))?;
 
         match output {
-            Some(o) => {
+            AddPointResult::Ready(o) => {
                 let mut items: Vec<(&str, Robj)> = vec![("y", o.y.into_robj())];
                 if let Some(se) = o.standard_error {
                     items.push(("standard_error", se.into_robj()));
@@ -604,11 +604,11 @@ impl ROnlineLoess {
                     ("point", List::from_pairs(items).into_robj()),
                 ]))
             }
-            None if dropped_candidate => Ok(List::from_pairs(vec![
+            AddPointResult::Dropped => Ok(List::from_pairs(vec![
                 ("status", "dropped".into_robj()),
                 ("point", Robj::from(NULL)),
             ])),
-            None => Ok(List::from_pairs(vec![
+            AddPointResult::Filling => Ok(List::from_pairs(vec![
                 ("status", "filling".into_robj()),
                 ("point", Robj::from(NULL)),
             ])),

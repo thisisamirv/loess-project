@@ -13,8 +13,8 @@ typedef struct fastloess_GoStreamingLoess fastloess_GoStreamingLoess;
 
 typedef struct fastloess_GoLoessResult {
   /**
-   * x values (length = n, or n * dimensions when multivariate). Same order as
-   * the input unless `return_sorted` was set, in which case ascending by x.
+   * x values (length = n, or n * dimensions when multivariate). Same order as the
+   * input unless `return_sorted` was set, in which case ascending by x.
    */
   double *x;
   /**
@@ -54,9 +54,8 @@ typedef struct fastloess_GoLoessResult {
    */
   double *robustness_weights;
   /**
-   * Local fit's gradient at each point, `dimensions` values per point,
-   * flattened (NULL if not requested; only takes effect when surface_mode =
-   * "direct")
+   * Local fit's gradient at each point, `dimensions` values per point, flattened
+   * (NULL if not requested; only takes effect when surface_mode = "direct")
    */
   double *gradient;
   /**
@@ -78,8 +77,7 @@ typedef struct fastloess_GoLoessResult {
   double effective_df;
   double residual_sd;
   /**
-   * Hat-matrix statistics (NaN / NULL if not computed; set return_se = 1 to
-   * enable)
+   * Hat-matrix statistics (NaN / NULL if not computed; set return_se = 1 to enable)
    */
   double enp;
   double trace_hat;
@@ -100,13 +98,11 @@ typedef struct fastloess_GoLoessResult {
   double *cv_scores;
   size_t cv_scores_len;
   /**
-   * Opaque handle for `go_predict()`, non-NULL only if `retain_model` was set
-   * to 1.
+   * Opaque handle for `go_predict()`, non-NULL only if `retain_model` was set to 1.
    *
-   * Ownership: callers that keep the handle must call
-   * `go_loess_take_predict_handle` before `go_loess_free_result`. Otherwise
-   * `go_loess_free_result` frees it. Taken handles must eventually be freed via
-   * `go_predict_handle_free`.
+   * Ownership: callers that keep the handle must call `go_loess_take_predict_handle`
+   * before `go_loess_free_result`. Otherwise `go_loess_free_result` frees it.
+   * Taken handles must eventually be freed via `go_predict_handle_free`.
    */
   struct fastloess_GoPredictHandle *predict_handle;
   /**
@@ -193,8 +189,7 @@ typedef struct fastloess_GoOnlineOutput {
    */
   double prediction_upper;
   /**
-   * Latest point's local fit gradient, `dimensions` values, NULL if not
-   * requested
+   * Latest point's local fit gradient, `dimensions` values, NULL if not requested
    */
   double *gradient;
   /**
@@ -228,13 +223,11 @@ extern "C" {
 #endif // __cplusplus
 
 /**
- * Thread-local last-error message from the most recent failed constructor on
- * this OS thread.
+ * Thread-local last-error message from the most recent failed constructor on this OS thread.
  *
- * The returned pointer is owned by the library and remains valid only until the
- * next call that sets or clears the last-error slot on this thread. Callers
- * must read it on the same OS thread as the failing call. Returns null when no
- * error is stored.
+ * The returned pointer is owned by the library and remains valid only until the next call that
+ * sets or clears the last-error slot on this thread. Callers must read it on the same OS thread
+ * as the failing call. Returns null when no error is stored.
  */
 const char *go_last_error_message(void);
 
@@ -244,19 +237,38 @@ const char *go_last_error_message(void);
  * # Safety
  * Pointers must be valid null-terminated strings or null. Arrays must be valid.
  */
-struct fastloess_GoLoess *go_loess_new(
-    double fraction, int iterations, const char *weight_function,
-    const char *robustness_method, const char *scaling_method,
-    const char *boundary_policy, double confidence_intervals,
-    double prediction_intervals, int return_diagnostics, int return_residuals,
-    int return_robustness_weights, const char *zero_weight_fallback,
-    double auto_converge, const double *cv_fractions, size_t cv_fractions_len,
-    const char *cv_method, int cv_k, int parallel, const char *degree,
-    int dimensions, const char *distance_metric, const char *surface_mode,
-    int return_se, int return_sorted, double cell, int interpolation_vertices,
-    int boundary_degree_fallback, const double *weighted_metric_weights,
-    size_t weighted_metric_weights_len, const char *missing, int retain_model,
-    int return_gradient);
+struct fastloess_GoLoess *go_loess_new(double fraction,
+                                       int iterations,
+                                       const char *weight_function,
+                                       const char *robustness_method,
+                                       const char *scaling_method,
+                                       const char *boundary_policy,
+                                       double confidence_intervals,
+                                       double prediction_intervals,
+                                       int return_diagnostics,
+                                       int return_residuals,
+                                       int return_robustness_weights,
+                                       const char *zero_weight_fallback,
+                                       double auto_converge,
+                                       const double *cv_fractions,
+                                       size_t cv_fractions_len,
+                                       const char *cv_method,
+                                       int cv_k,
+                                       int parallel,
+                                       const char *degree,
+                                       int dimensions,
+                                       const char *distance_metric,
+                                       const char *surface_mode,
+                                       int return_se,
+                                       int return_sorted,
+                                       double cell,
+                                       int interpolation_vertices,
+                                       int boundary_degree_fallback,
+                                       const double *weighted_metric_weights,
+                                       size_t weighted_metric_weights_len,
+                                       const char *missing,
+                                       int retain_model,
+                                       int return_gradient);
 
 /**
  * Set CV seed for reproducible K-fold splits.
@@ -264,23 +276,22 @@ struct fastloess_GoLoess *go_loess_new(
  * # Safety
  * ptr must be valid.
  */
-void go_loess_set_cv_seed(struct fastloess_GoLoess *ptr,
-                          unsigned long long seed);
+void go_loess_set_cv_seed(struct fastloess_GoLoess *ptr, unsigned long long seed);
 
 /**
  * Fit the model.
  *
  * # Safety
- * `ptr` must be a valid GoLoess pointer. `x_values` must be a valid array of
- * length `x_n`
- * (= n_observations * dimensions), `y_values` must be a valid array of length
- * `y_n`
- * (= n_observations). `custom_weights` is optional: pass null and 0 to omit;
- * when non-null, `custom_weights_n` must equal `y_n`.
+ * `ptr` must be a valid GoLoess pointer. `x_values` must be a valid array of length `x_n`
+ * (= n_observations * dimensions), `y_values` must be a valid array of length `y_n`
+ * (= n_observations). `custom_weights` is optional: pass null and 0 to omit; when
+ * non-null, `custom_weights_n` must equal `y_n`.
  */
 struct fastloess_GoLoessResult go_loess_fit(struct fastloess_GoLoess *ptr,
-                                            const double *x_values, size_t x_n,
-                                            const double *y_values, size_t y_n,
+                                            const double *x_values,
+                                            size_t x_n,
+                                            const double *y_values,
+                                            size_t y_n,
                                             const double *custom_weights,
                                             size_t custom_weights_n);
 
@@ -293,21 +304,25 @@ struct fastloess_GoLoessResult go_loess_fit(struct fastloess_GoLoess *ptr,
 void go_loess_free(struct fastloess_GoLoess *ptr);
 
 /**
- * Evaluate a fitted model (retained via `retain_model = 1`) at out-of-sample
- * query points not in the training set.
+ * Evaluate a fitted model (retained via `retain_model = 1`) at out-of-sample query
+ * points not in the training set.
  *
  * # Safety
  * `handle` must be a valid pointer obtained via `go_loess_take_predict_handle`
  * (or still owned in a result that has not been freed).
- * `new_x` must be a valid array of length `new_x_len`. `extrapolation` must be
- * a valid null-terminated string or null (defaults to "clamp").
+ * `new_x` must be a valid array of length `new_x_len`. `extrapolation` must be a
+ * valid null-terminated string or null (defaults to "clamp").
  */
-struct fastloess_GoPredictResult
-go_predict(struct fastloess_GoPredictHandle *handle, const double *new_x,
-           size_t new_x_len, int return_se, double confidence_level,
-           double prediction_level, int return_derivative,
-           const char *extrapolation, double max_extrapolation_distance,
-           double max_neighbor_distance);
+struct fastloess_GoPredictResult go_predict(struct fastloess_GoPredictHandle *handle,
+                                            const double *new_x,
+                                            size_t new_x_len,
+                                            int return_se,
+                                            double confidence_level,
+                                            double prediction_level,
+                                            int return_derivative,
+                                            const char *extrapolation,
+                                            double max_extrapolation_distance,
+                                            double max_neighbor_distance);
 
 /**
  * Free a GoPredictResult's heap-allocated buffers.
@@ -323,8 +338,7 @@ void go_predict_free_result(struct fastloess_GoPredictResult *result);
  * Free a `GoPredictHandle` returned via `GoLoessResult::predict_handle`.
  *
  * # Safety
- * `ptr` must be a valid pointer returned via `GoLoessResult::predict_handle`,
- * or null.
+ * `ptr` must be a valid pointer returned via `GoLoessResult::predict_handle`, or null.
  */
 void go_predict_handle_free(struct fastloess_GoPredictHandle *ptr);
 
@@ -334,44 +348,63 @@ void go_predict_handle_free(struct fastloess_GoPredictHandle *ptr);
  * # Safety
  * Pointers must be valid null-terminated strings or null.
  */
-struct fastloess_GoStreamingLoess *go_streaming_new(
-    double fraction, int iterations, const char *weight_function,
-    const char *robustness_method, const char *scaling_method,
-    const char *boundary_policy, int return_diagnostics, int return_residuals,
-    int return_robustness_weights, const char *zero_weight_fallback,
-    double auto_converge, int parallel, int chunk_size, int overlap,
-    const char *merge_strategy, const char *degree, int dimensions,
-    const char *distance_metric, const char *surface_mode, double cell,
-    int interpolation_vertices, int boundary_degree_fallback,
-    const double *weighted_metric_weights, size_t weighted_metric_weights_len,
-    const char *missing, int return_gradient, double confidence_intervals,
-    double prediction_intervals, int return_se);
+struct fastloess_GoStreamingLoess *go_streaming_new(double fraction,
+                                                    int iterations,
+                                                    const char *weight_function,
+                                                    const char *robustness_method,
+                                                    const char *scaling_method,
+                                                    const char *boundary_policy,
+                                                    int return_diagnostics,
+                                                    int return_residuals,
+                                                    int return_robustness_weights,
+                                                    const char *zero_weight_fallback,
+                                                    double auto_converge,
+                                                    int parallel,
+                                                    int chunk_size,
+                                                    int overlap,
+                                                    const char *merge_strategy,
+                                                    const char *degree,
+                                                    int dimensions,
+                                                    const char *distance_metric,
+                                                    const char *surface_mode,
+                                                    double cell,
+                                                    int interpolation_vertices,
+                                                    int boundary_degree_fallback,
+                                                    const double *weighted_metric_weights,
+                                                    size_t weighted_metric_weights_len,
+                                                    const char *missing,
+                                                    int return_gradient,
+                                                    double confidence_intervals,
+                                                    double prediction_intervals,
+                                                    int return_se);
 
 /**
  * Process a chunk of data.
  *
  * # Safety
- * `ptr` must be valid. `x_values` must be a valid array of length `x_n` (=
- * n_observations * dimensions), `y_values` must be a valid array of length
- * `y_n` (= n_observations).
+ * `ptr` must be valid. `x_values` must be a valid array of length `x_n` (= n_observations * dimensions),
+ * `y_values` must be a valid array of length `y_n` (= n_observations).
  */
-struct fastloess_GoLoessResult
-go_streaming_process(struct fastloess_GoStreamingLoess *ptr,
-                     const double *x_values, size_t x_n, const double *y_values,
-                     size_t y_n);
+struct fastloess_GoLoessResult go_streaming_process(struct fastloess_GoStreamingLoess *ptr,
+                                                    const double *x_values,
+                                                    size_t x_n,
+                                                    const double *y_values,
+                                                    size_t y_n);
 
 /**
  * Process a chunk with one case weight per observation.
  *
  * # Safety
- * `ptr` must be valid. Each non-empty input pointer must point to its
- * respective length of initialized values.
+ * `ptr` must be valid. Each non-empty input pointer must point to its respective length of
+ * initialized values.
  */
-struct fastloess_GoLoessResult
-go_streaming_process_weighted(struct fastloess_GoStreamingLoess *ptr,
-                              const double *x_values, size_t x_n,
-                              const double *y_values, size_t y_n,
-                              const double *weights, size_t weights_n);
+struct fastloess_GoLoessResult go_streaming_process_weighted(struct fastloess_GoStreamingLoess *ptr,
+                                                             const double *x_values,
+                                                             size_t x_n,
+                                                             const double *y_values,
+                                                             size_t y_n,
+                                                             const double *weights,
+                                                             size_t weights_n);
 
 /**
  * Finalize the streaming process.
@@ -379,8 +412,7 @@ go_streaming_process_weighted(struct fastloess_GoStreamingLoess *ptr,
  * # Safety
  * `ptr` must be valid.
  */
-struct fastloess_GoLoessResult
-go_streaming_finalize(struct fastloess_GoStreamingLoess *ptr);
+struct fastloess_GoLoessResult go_streaming_finalize(struct fastloess_GoStreamingLoess *ptr);
 
 /**
  * Free model.
@@ -396,17 +428,32 @@ void go_streaming_free(struct fastloess_GoStreamingLoess *ptr);
  * # Safety
  * Pointers must be valid null-terminated strings or null.
  */
-struct fastloess_GoOnlineLoess *go_online_new(
-    double fraction, int iterations, const char *weight_function,
-    const char *robustness_method, const char *scaling_method,
-    const char *boundary_policy, int return_robustness_weights,
-    const char *zero_weight_fallback, double auto_converge, int window_capacity,
-    int min_points, const char *update_mode, const char *degree, int dimensions,
-    const char *distance_metric, const char *surface_mode, double cell,
-    int interpolation_vertices, int boundary_degree_fallback,
-    const double *weighted_metric_weights, size_t weighted_metric_weights_len,
-    const char *missing, int return_gradient, double confidence_intervals,
-    double prediction_intervals, int return_se);
+struct fastloess_GoOnlineLoess *go_online_new(double fraction,
+                                              int iterations,
+                                              const char *weight_function,
+                                              const char *robustness_method,
+                                              const char *scaling_method,
+                                              const char *boundary_policy,
+                                              int return_robustness_weights,
+                                              const char *zero_weight_fallback,
+                                              double auto_converge,
+                                              int window_capacity,
+                                              int min_points,
+                                              const char *update_mode,
+                                              const char *degree,
+                                              int dimensions,
+                                              const char *distance_metric,
+                                              const char *surface_mode,
+                                              double cell,
+                                              int interpolation_vertices,
+                                              int boundary_degree_fallback,
+                                              const double *weighted_metric_weights,
+                                              size_t weighted_metric_weights_len,
+                                              const char *missing,
+                                              int return_gradient,
+                                              double confidence_intervals,
+                                              double prediction_intervals,
+                                              int return_se);
 
 /**
  * Add a single scalar point to the model.
@@ -414,8 +461,9 @@ struct fastloess_GoOnlineLoess *go_online_new(
  * # Safety
  * `ptr` must be a valid `GoOnlineLoess` pointer.
  */
-struct fastloess_GoOnlineOutput
-go_online_add_point(struct fastloess_GoOnlineLoess *ptr, double x, double y);
+struct fastloess_GoOnlineOutput go_online_add_point(struct fastloess_GoOnlineLoess *ptr,
+                                                    double x,
+                                                    double y);
 
 /**
  * Add a scalar point with a finite, non-negative case weight.
@@ -423,9 +471,10 @@ go_online_add_point(struct fastloess_GoOnlineLoess *ptr, double x, double y);
  * # Safety
  * `ptr` must be a valid `GoOnlineLoess` pointer.
  */
-struct fastloess_GoOnlineOutput
-go_online_add_point_weighted(struct fastloess_GoOnlineLoess *ptr, double x,
-                             double y, double weight);
+struct fastloess_GoOnlineOutput go_online_add_point_weighted(struct fastloess_GoOnlineLoess *ptr,
+                                                             double x,
+                                                             double y,
+                                                             double weight);
 
 /**
  * Add a point with one coordinate per configured predictor dimension.
@@ -434,9 +483,10 @@ go_online_add_point_weighted(struct fastloess_GoOnlineLoess *ptr, double x,
  * `ptr` must be valid. If `x_n` is nonzero, `x_values` must point to `x_n`
  * initialized values.
  */
-struct fastloess_GoOnlineOutput
-go_online_add_point_vector(struct fastloess_GoOnlineLoess *ptr,
-                           const double *x_values, size_t x_n, double y);
+struct fastloess_GoOnlineOutput go_online_add_point_vector(struct fastloess_GoOnlineLoess *ptr,
+                                                           const double *x_values,
+                                                           size_t x_n,
+                                                           double y);
 
 /**
  * Add a coordinate vector with a finite, non-negative case weight.
@@ -445,10 +495,11 @@ go_online_add_point_vector(struct fastloess_GoOnlineLoess *ptr,
  * `ptr` must be valid. If `x_n` is nonzero, `x_values` must point to `x_n`
  * initialized values.
  */
-struct fastloess_GoOnlineOutput
-go_online_add_point_vector_weighted(struct fastloess_GoOnlineLoess *ptr,
-                                    const double *x_values, size_t x_n,
-                                    double y, double weight);
+struct fastloess_GoOnlineOutput go_online_add_point_vector_weighted(struct fastloess_GoOnlineLoess *ptr,
+                                                                    const double *x_values,
+                                                                    size_t x_n,
+                                                                    double y,
+                                                                    double weight);
 
 /**
  * Compute diagnostics for the current Online window.
@@ -456,8 +507,7 @@ go_online_add_point_vector_weighted(struct fastloess_GoOnlineLoess *ptr,
  * # Safety
  * `ptr` must be a valid `GoOnlineLoess` pointer.
  */
-struct fastloess_GoOnlineDiagnostics
-go_online_window_diagnostics(struct fastloess_GoOnlineLoess *ptr);
+struct fastloess_GoOnlineDiagnostics go_online_window_diagnostics(struct fastloess_GoOnlineLoess *ptr);
 
 /**
  * Free an Online diagnostics error message, if present.
@@ -465,8 +515,7 @@ go_online_window_diagnostics(struct fastloess_GoOnlineLoess *ptr);
  * # Safety
  * `diagnostics` must point to a GoOnlineDiagnostics returned by this crate.
  */
-void go_online_free_diagnostics(
-    struct fastloess_GoOnlineDiagnostics *diagnostics);
+void go_online_free_diagnostics(struct fastloess_GoOnlineDiagnostics *diagnostics);
 
 /**
  * Predict query points using the current Online window.
@@ -475,15 +524,19 @@ void go_online_free_diagnostics(
  * `ptr` must be valid. `new_x` must point to `new_x_len` initialized values;
  * `extrapolation` must be a valid C string or null.
  */
-struct fastloess_GoPredictResult go_online_predict_window(
-    struct fastloess_GoOnlineLoess *ptr, const double *new_x, size_t new_x_len,
-    int return_se, double confidence_level, double prediction_level,
-    int return_derivative, const char *extrapolation,
-    double max_extrapolation_distance, double max_neighbor_distance);
+struct fastloess_GoPredictResult go_online_predict_window(struct fastloess_GoOnlineLoess *ptr,
+                                                          const double *new_x,
+                                                          size_t new_x_len,
+                                                          int return_se,
+                                                          double confidence_level,
+                                                          double prediction_level,
+                                                          int return_derivative,
+                                                          const char *extrapolation,
+                                                          double max_extrapolation_distance,
+                                                          double max_neighbor_distance);
 
 /**
- * Free heap-owned fields in a `GoOnlineOutput` (error string and gradient
- * buffer).
+ * Free heap-owned fields in a `GoOnlineOutput` (error string and gradient buffer).
  *
  * Safe to call when owned pointers are null. Freed pointers are nulled so a
  * second call is a no-op.
@@ -509,8 +562,7 @@ void go_online_free(struct fastloess_GoOnlineLoess *ptr);
  * # Safety
  * `result` must be a valid pointer to a `GoLoessResult`, or null.
  */
-struct fastloess_GoPredictHandle *
-go_loess_take_predict_handle(struct fastloess_GoLoessResult *result);
+struct fastloess_GoPredictHandle *go_loess_take_predict_handle(struct fastloess_GoLoessResult *result);
 
 /**
  * Free a GoLoessResult.
@@ -525,7 +577,7 @@ go_loess_take_predict_handle(struct fastloess_GoLoessResult *result);
 void go_loess_free_result(struct fastloess_GoLoessResult *result);
 
 #ifdef __cplusplus
-} // extern "C"
-#endif // __cplusplus
+}  // extern "C"
+#endif  // __cplusplus
 
-#endif /* FASTLOESS_GO_H */
+#endif  /* FASTLOESS_GO_H */

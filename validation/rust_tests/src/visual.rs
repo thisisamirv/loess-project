@@ -1228,8 +1228,8 @@ fn run_online_comparison() -> Result<(), Box<dyn Error>> {
     for i in 0..n {
         let r_small = adapter_small.add_point(&x[i..i + 1], y[i]).unwrap();
         let r_large = adapter_large.add_point(&x[i..i + 1], y[i]).unwrap();
-        y_small.push(r_small.as_ref().map(|o| o.y).unwrap_or(y[i]));
-        y_large.push(r_large.as_ref().map(|o| o.y).unwrap_or(y[i]));
+        y_small.push(r_small.as_ready().map(|o| o.y).unwrap_or(y[i]));
+        y_large.push(r_large.as_ready().map(|o| o.y).unwrap_or(y[i]));
     }
 
     let path = "output/visual/online_comparison.csv";
@@ -1373,8 +1373,8 @@ fn run_adapter_comparison() -> Result<(), Box<dyn Error>> {
     for i in 0..n {
         let r_off = online_off.add_point(&x[i..i + 1], y[i])?;
         let r_on = online_on.add_point(&x[i..i + 1], y[i])?;
-        y_o_off.push(r_off.as_ref().map(|o| o.y).unwrap_or(y_true[i]));
-        y_o_on.push(r_on.as_ref().map(|o| o.y).unwrap_or(y_true[i]));
+        y_o_off.push(r_off.as_ready().map(|o| o.y).unwrap_or(y_true[i]));
+        y_o_on.push(r_on.as_ready().map(|o| o.y).unwrap_or(y_true[i]));
     }
 
     let path = "output/visual/adapter_comparison.csv";

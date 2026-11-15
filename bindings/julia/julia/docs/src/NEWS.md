@@ -12,6 +12,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Extend/Zero boundary pads use unit spacing when leading/trailing predictor ties would otherwise stack pads.
 * Fixed retained-model `predict_handle` ownership so error paths no longer leak the handle and successful conversion no longer risks double-free.
 * Free native result buffers with `try`/`finally`, and clear finalizer-owned handles after free.
 * Fixed FFI length fields truncating on 64-bit Windows by using pointer-sized sizes instead of `Culong`.

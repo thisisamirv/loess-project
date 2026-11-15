@@ -3,6 +3,17 @@
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+* Breaking change: `OnlineLoess::add_point` returns `AddPointResult` (`Filling` / `Ready` / `Dropped`) instead of `Option<OnlineOutput>`.
+
+### Fixed
+
+* Distinguish Online `missing="drop"` from a still-filling window via `AddPointResult` (bindings no longer infer status from `None`).
+* Use unit edge spacing for Extend/Zero boundary pads when leading/trailing `x` ties would otherwise stack pads.
+
 ## 3.0.0
 
 ### Added

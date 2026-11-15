@@ -3,7 +3,7 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
-use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
+use ::fastLoess::internals::adapters::online::{AddPointResult as OnlineAddPointResult, ParallelOnlineLoess};
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::LoessBuilder;
 use ::fastLoess::internals::binding_support as shared_parse;
@@ -1031,7 +1031,6 @@ impl OnlineLoess {
     /// ignores a non-finite `x` or `y`. Weight is not part of drop detection.
     #[napi(js_name = "add_point")]
     pub fn add_point(&mut self, x: f64, y: f64, weight: Option<f64>) -> Result<AddPointResult> {
-        let dropped_candidate = !(x.is_finite() && y.is_finite());
         let output = shared_parse::map_loess_result(self.model_mut()?.add_point_weighted(
             &[x],
             y,
@@ -1039,7 +1038,7 @@ impl OnlineLoess {
         ))
         .map_err(to_napi_error)?;
         Ok(match output {
-            Some(o) => AddPointResult {
+            OnlineAddPointResult::Ready(o) => AddPointResult {
                 status: "ready".to_string(),
                 point: Some(OnlineOutput {
                     y: o.y,
@@ -1054,11 +1053,11 @@ impl OnlineLoess {
                     gradient: o.gradient,
                 }),
             },
-            None if dropped_candidate => AddPointResult {
+            OnlineAddPointResult::Dropped => AddPointResult {
                 status: "dropped".to_string(),
                 point: None,
             },
-            None => AddPointResult {
+            OnlineAddPointResult::Filling => AddPointResult {
                 status: "filling".to_string(),
                 point: None,
             },
@@ -1077,7 +1076,6 @@ impl OnlineLoess {
         weight: Option<f64>,
     ) -> Result<AddPointResult> {
         let x = x.as_ref().to_vec();
-        let dropped_candidate = x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
         let output = shared_parse::map_loess_result(self.model_mut()?.add_point_weighted(
             &x,
             y,
@@ -1085,7 +1083,7 @@ impl OnlineLoess {
         ))
         .map_err(to_napi_error)?;
         Ok(match output {
-            Some(o) => AddPointResult {
+            OnlineAddPointResult::Ready(o) => AddPointResult {
                 status: "ready".to_string(),
                 point: Some(OnlineOutput {
                     y: o.y,
@@ -1100,11 +1098,11 @@ impl OnlineLoess {
                     gradient: o.gradient,
                 }),
             },
-            None if dropped_candidate => AddPointResult {
+            OnlineAddPointResult::Dropped => AddPointResult {
                 status: "dropped".to_string(),
                 point: None,
             },
-            None => AddPointResult {
+            OnlineAddPointResult::Filling => AddPointResult {
                 status: "filling".to_string(),
                 point: None,
             },

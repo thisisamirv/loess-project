@@ -16,7 +16,7 @@ use std::ptr;
 use std::slice::from_raw_parts;
 use std::sync::Arc;
 
-use fastLoess::internals::adapters::online::ParallelOnlineLoess;
+use fastLoess::internals::adapters::online::{AddPointResult, ParallelOnlineLoess};
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use fastLoess::internals::api::LoessBuilder;
 use fastLoess::internals::binding_support as shared_parse;
@@ -1227,16 +1227,19 @@ fn go_online_add_point_impl(
             return go_online_error_output(shared_parse::MODEL_POINTER_IS_NULL);
         }
         let loess = unsafe { &mut *ptr };
-        let dropped_candidate = x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
 
         if let Some(model) = &mut loess.model {
             match model.add_point_weighted(x, y, weight) {
                 Err(e) => go_online_error_output(&e.to_string()),
-                Ok(None) => GoOnlineOutput {
-                    has_value: if dropped_candidate { -1 } else { 0 },
+                Ok(AddPointResult::Dropped) => GoOnlineOutput {
+                    has_value: -1,
                     ..GoOnlineOutput::default()
                 },
-                Ok(Some(o)) => {
+                Ok(AddPointResult::Filling) => GoOnlineOutput {
+                    has_value: 0,
+                    ..GoOnlineOutput::default()
+                },
+                Ok(AddPointResult::Ready(o)) => {
                     let (
                         standard_error,
                         residual,

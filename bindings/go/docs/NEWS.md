@@ -16,6 +16,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Extend/Zero boundary pads use unit spacing when leading/trailing predictor ties would otherwise stack pads.
 * Fixed retained-model `predict_handle` ownership so `free_result` no longer leaks or double-frees the handle; Go takes ownership via `go_loess_take_predict_handle`.
 * Keep Go slice inputs alive across cgo calls, free native results with `defer`, and make `Close`/finalizer races safe with an atomic pointer swap.
 * Reject negative Streaming/Online `Iterations` at the native boundary instead of casting them to a huge unsigned count.

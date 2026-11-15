@@ -312,7 +312,7 @@ export class OnlineOutput {
 
 "#;
 
-use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
+use ::fastLoess::internals::adapters::online::{AddPointResult as OnlineAddPointResult, ParallelOnlineLoess};
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::LoessBuilder;
 use ::fastLoess::internals::binding_support as shared_parse;
@@ -1139,21 +1139,33 @@ fn smooth(
     Ok(LoessResult { inner: result })
 }
 
-fn add_point_js_result(
-    output: Option<OnlineOutput>,
-    dropped_candidate: bool,
-) -> Result<JsValue, JsValue> {
+fn add_point_js_result(output: OnlineAddPointResult<f64>) -> Result<JsValue, JsValue> {
     let obj = Object::new();
     match output {
-        Some(o) => {
+        OnlineAddPointResult::Ready(o) => {
             Reflect::set(
                 &obj,
                 &JsValue::from_str("status"),
                 &JsValue::from_str("ready"),
             )?;
-            Reflect::set(&obj, &JsValue::from_str("point"), &JsValue::from(o))?;
+            Reflect::set(
+                &obj,
+                &JsValue::from_str("point"),
+                &JsValue::from(OnlineOutput {
+                    y: o.y,
+                    standard_error: o.standard_error,
+                    residual: o.residual,
+                    robustness_weight: o.robustness_weight,
+                    iterations_used: o.iterations_used,
+                    confidence_lower: o.confidence_lower,
+                    confidence_upper: o.confidence_upper,
+                    prediction_lower: o.prediction_lower,
+                    prediction_upper: o.prediction_upper,
+                    gradient: o.gradient,
+                }),
+            )?;
         }
-        None if dropped_candidate => {
+        OnlineAddPointResult::Dropped => {
             Reflect::set(
                 &obj,
                 &JsValue::from_str("status"),
@@ -1161,7 +1173,7 @@ fn add_point_js_result(
             )?;
             Reflect::set(&obj, &JsValue::from_str("point"), &JsValue::null())?;
         }
-        None => {
+        OnlineAddPointResult::Filling => {
             Reflect::set(
                 &obj,
                 &JsValue::from_str("status"),
@@ -1387,45 +1399,15 @@ impl OnlineLoess {
 
     #[wasm_bindgen(js_name = "add_point", skip_typescript)]
     pub fn add_point(&mut self, x: f64, y: f64) -> Result<JsValue, JsValue> {
-        let dropped_candidate = !(x.is_finite() && y.is_finite());
         let output = map_loess_err(self.model_mut()?.add_point(&[x], y))?;
-        add_point_js_result(
-            output.map(|o| OnlineOutput {
-                y: o.y,
-                standard_error: o.standard_error,
-                residual: o.residual,
-                robustness_weight: o.robustness_weight,
-                iterations_used: o.iterations_used,
-                confidence_lower: o.confidence_lower,
-                confidence_upper: o.confidence_upper,
-                prediction_lower: o.prediction_lower,
-                prediction_upper: o.prediction_upper,
-                gradient: o.gradient,
-            }),
-            dropped_candidate,
-        )
+        add_point_js_result(output)
     }
 
     #[wasm_bindgen(js_name = "add_point_vector", skip_typescript)]
     pub fn add_point_vector(&mut self, x: &Float64Array, y: f64) -> Result<JsValue, JsValue> {
         let x = x.to_vec();
-        let dropped_candidate = x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
         let output = map_loess_err(self.model_mut()?.add_point(&x, y))?;
-        add_point_js_result(
-            output.map(|o| OnlineOutput {
-                y: o.y,
-                standard_error: o.standard_error,
-                residual: o.residual,
-                robustness_weight: o.robustness_weight,
-                iterations_used: o.iterations_used,
-                confidence_lower: o.confidence_lower,
-                confidence_upper: o.confidence_upper,
-                prediction_lower: o.prediction_lower,
-                prediction_upper: o.prediction_upper,
-                gradient: o.gradient,
-            }),
-            dropped_candidate,
-        )
+        add_point_js_result(output)
     }
 
     #[wasm_bindgen(js_name = add_point_weighted, skip_typescript)]
@@ -1441,24 +1423,8 @@ impl OnlineLoess {
         weight: f64,
     ) -> Result<JsValue, JsValue> {
         let x = x.to_vec();
-        // Weight is not part of drop detection — match C++.
-        let dropped_candidate = x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
         let output = map_loess_err(self.model_mut()?.add_point_weighted(&x, y, weight))?;
-        add_point_js_result(
-            output.map(|o| OnlineOutput {
-                y: o.y,
-                standard_error: o.standard_error,
-                residual: o.residual,
-                robustness_weight: o.robustness_weight,
-                iterations_used: o.iterations_used,
-                confidence_lower: o.confidence_lower,
-                confidence_upper: o.confidence_upper,
-                prediction_lower: o.prediction_lower,
-                prediction_upper: o.prediction_upper,
-                gradient: o.gradient,
-            }),
-            dropped_candidate,
-        )
+        add_point_js_result(output)
     }
 
     #[wasm_bindgen(js_name = window_diagnostics, skip_typescript)]

@@ -9,7 +9,7 @@ use pyo3::types::{PyAny, PyDict};
 use std::fmt::Display;
 use std::sync::Mutex;
 
-use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
+use ::fastLoess::internals::adapters::online::{AddPointResult, ParallelOnlineLoess};
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::binding_support as shared_parse;
 
@@ -954,7 +954,6 @@ impl PyOnlineLoess {
                 x_vec.len(),
             )));
         }
-        let dropped_candidate = x_vec.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
         let output = py.detach(move || {
             let mut guard = self.inner.lock().map_err(|e| mutex_poison_err(&e))?;
             let model = guard
@@ -964,7 +963,7 @@ impl PyOnlineLoess {
                 .map_err(to_py_error)
         })?;
         Ok(match output {
-            Some(o) => PyAddPointResult {
+            AddPointResult::Ready(o) => PyAddPointResult {
                 status: "ready".to_owned(),
                 point: Some(PyOnlineOutput {
                     y: o.y,
@@ -979,11 +978,11 @@ impl PyOnlineLoess {
                     gradient: o.gradient,
                 }),
             },
-            None if dropped_candidate => PyAddPointResult {
+            AddPointResult::Dropped => PyAddPointResult {
                 status: "dropped".to_owned(),
                 point: None,
             },
-            None => PyAddPointResult {
+            AddPointResult::Filling => PyAddPointResult {
                 status: "filling".to_owned(),
                 point: None,
             },

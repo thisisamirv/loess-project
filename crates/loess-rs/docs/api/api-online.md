@@ -30,7 +30,7 @@ fn main() -> Result<(), LoessError> {
 
 #### `add_point(x, y)`
 
-Adds a single point `(x, y)` to the window. `x` is a slice of predictor values (one per dimension). Returns `Result<Option<OnlineOutput<T>>, LoessError>`.
+Adds a single point `(x, y)` to the window. `x` is a slice of predictor values (one per dimension). Returns `Result<AddPointResult<T>, LoessError>`.
 
 `add_point_weighted(x, y, weight)` accepts a finite non-negative case weight; `add_point` uses weight `1`. `window_diagnostics()` computes full-window metrics on demand. `predict_window(new_x, options)` fits the current bounded window and evaluates query points without retaining older observations.
 
@@ -43,15 +43,15 @@ fn main() -> Result<(), LoessError> {
     let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let mut processor = OnlineLoess::new().fraction(0.5f64).window_capacity(50usize).min_points(3usize).build()?;;
+    let mut processor = OnlineLoess::new().fraction(0.5f64).window_capacity(50usize).min_points(3usize).build()?;
 
-    // Returns None until min_points (3) are reached
-    let r1 = processor.add_point(&[x[0]], y[0])?;  // None
-    let r2 = processor.add_point(&[x[1]], y[1])?;  // None
+    // Returns Filling until min_points (3) are reached
+    let r1 = processor.add_point(&[x[0]], y[0])?;  // Filling
+    let r2 = processor.add_point(&[x[1]], y[1])?;  // Filling
 
-    // Returns Some(OnlineOutput) once enough points are available
+    // Returns Ready(OnlineOutput) once enough points are available
     let r3 = processor.add_point(&[x[2]], y[2])?;
-    if let Some(output) = r3 {
+    if let Some(output) = r3.ready() {
         println!("Smoothed value: {}", output.y);
     }
 
@@ -255,7 +255,7 @@ Policy for handling a non-finite (NaN/Inf) value in the `x` coordinates or `y` v
 | Option | Behavior |
 | --- | --- |
 | `"error"` (default) | Return an error |
-| `"drop"` | Silently ignore the point — `add_point` returns `Ok(None)` instead of adding it to the window |
+| `"drop"` | Silently ignore the point — `add_point` returns `Ok(AddPointResult::Dropped)` instead of adding it to the window |
 
 ### window_capacity
 
@@ -263,7 +263,7 @@ Maximum number of most recent points kept in the sliding window; older points ar
 
 ### min_points
 
-Minimum number of points required before smoothing starts. `add_point()` returns `None` until the window reaches this size.
+Minimum number of points required before smoothing starts. `add_point()` returns `Filling` until the window reaches this size.
 
 ### update_mode
 
@@ -307,7 +307,7 @@ Each local polynomial fit (degree >= linear) already computes per-dimension coef
 
 ### `OnlineOutput<T>`
 
-Returned inside `Ok(Some(...))` by `add_point()`. `None` while the window is still filling.
+Returned inside `Ok(Ready(...))` by `add_point()`. `Filling` while the window is still filling.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -318,4 +318,4 @@ Returned inside `Ok(Some(...))` by `add_point()`. `None` while the window is sti
 | `iterations_used` | `Option<usize>` | Robustness iterations performed |
 | `gradient` | `Option<Vec<T>>` | Local fit gradient (`dimensions` values) for the latest point, if `return_gradient` was set |
 
-`OnlineOutput` has no per-point diagnostics field. Call `window_diagnostics()` to compute RMSE, MAE, R-squared, and residual scale for the full current window on demand; it returns `None` until `min_points` have arrived.
+`OnlineOutput` has no per-point diagnostics field. Call `window_diagnostics()` to compute RMSE, MAE, R-squared, and residual scale for the full current window on demand; it returns `Filling` until `min_points` have arrived.
