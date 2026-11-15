@@ -811,6 +811,14 @@ void testOnlineMissingPolicy() {
   assertTrue(res.has_value(), "add_point should not error under missing=drop");
   assertTrue(!res.value().has_value(),
              "dropped point should not produce an output");
+  assertTrue(res.value().dropped(),
+             "missing=drop should report OnlinePointStatus::Dropped");
+  assertTrue(res.value().status() == OnlinePointStatus::Dropped,
+             "missing=drop status should be Dropped");
+  auto filling = online.add_point(k_linear_intercept, k_linear_slope);
+  assertTrue(filling.has_value(), "finite add_point should not error");
+  assertTrue(filling.value().status() == OnlinePointStatus::Filling,
+             "finite point after drop should still be Filling");
 }
 
 // ── Parameter coverage tests ───────────────────────────────────────────────

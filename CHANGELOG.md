@@ -76,6 +76,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Distinguish online `missing="drop"` (`AddPointDropped` / `has_value = -1`) from a still-filling window (`AddPointFilling` / `has_value = 0`); `AddPoint` and related methods now return `AddPointStatus`.
 - Reject negative Streaming/Online `iterations` instead of casting them to a huge `usize`.
 
+**C++:**
+
+- Expose `fastloess_loess_take_predict_handle`; document that `fastloess_loess_free_result` frees any remaining handle (already nulled via full struct reset).
+- Distinguish online `missing="drop"` (`OnlinePointStatus::Dropped` / `has_value = -1`) from a still-filling window (`Filling` / `has_value = 0`); `OnlineOutput::has_value()` is true only when ready.
+
 ## 3.0.0
 
 ### Added
