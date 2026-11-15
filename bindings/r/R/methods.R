@@ -345,8 +345,9 @@ finalize.StreamingLoess <- function(model, ...) {
 #' @param weight Finite non-negative case weight for this observation; defaults
 #'   to 1.
 #' @param ... Must be empty.
-#' @return An online result list, or \code{NULL} if fewer than
-#'   \code{min_points} have been added.
+#' @return A list with \code{status} (\code{"filling"}, \code{"ready"}, or
+#'   \code{"dropped"}) and \code{point} (an online-output list when ready;
+#'   otherwise \code{NULL}).
 #' @examples
 #' model <- OnlineLoess(fraction = 0.2, window_capacity = 20L, min_points = 2L)
 #' invisible(add_point(model, 1.0, 0.5))
@@ -368,6 +369,46 @@ add_point.OnlineLoess <- function(model, x, y, weight = 1.0, ...) {
         as.double(y),
         as.double(weight)
     )
+}
+
+#' Release native resources held by a LOESS model
+#'
+#' S3 methods for base \code{\link[base]{close}}. For \code{Loess}, clears
+#' retained predict state early. For \code{StreamingLoess} and
+#' \code{OnlineLoess}, releases the native adapter. Safe to call multiple
+#' times.
+#'
+#' @param con A \code{Loess}, \code{StreamingLoess}, or \code{OnlineLoess}
+#'   object.
+#' @param ... Must be empty.
+#' @return \code{NULL}, invisibly.
+#' @export
+close.Loess <- function(con, ...) {
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
+    con$handle$close()
+    invisible(NULL)
+}
+
+#' @rdname close.Loess
+#' @export
+close.StreamingLoess <- function(con, ...) {
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
+    con$handle$close()
+    invisible(NULL)
+}
+
+#' @rdname close.Loess
+#' @export
+close.OnlineLoess <- function(con, ...) {
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
+    con$handle$close()
+    invisible(NULL)
 }
 
 validate_online_coordinates <- function(x, dimensions) {

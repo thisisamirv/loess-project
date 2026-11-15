@@ -23,8 +23,9 @@ dimension. For one-dimensional models, a scalar is also accepted.}
 to 1.}
 }
 \value{
-An online result list, or \code{NULL} if fewer than
-\code{min_points} have been added.
+A list with \code{status} (\code{"filling"}, \code{"ready"}, or
+\code{"dropped"}) and \code{point} (an online-output list when ready;
+otherwise \code{NULL}).
 }
 \description{
 Add a single point to an online LOESS model

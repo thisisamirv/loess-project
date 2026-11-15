@@ -7,17 +7,17 @@ NULL
 RLoess <- new.env(parent = emptyenv())
 
 RLoess$new <- function(
-    fraction, iterations, weight_function,
-    robustness_method, scaling_method, boundary_policy,
-    confidence_intervals, prediction_intervals,
-    return_diagnostics, return_residuals,
-    return_robustness_weights, return_gradient, zero_weight_fallback,
-    auto_converge, cv_fractions, cv_method, cv_k, parallel,
-    degree, dimensions, distance_metric,
-    weighted_metric_weights,
-    surface_mode, return_se, return_sorted,
-    cell, interpolation_vertices, boundary_degree_fallback, cv_seed, missing,
-    retain_model
+  fraction, iterations, weight_function,
+  robustness_method, scaling_method, boundary_policy,
+  confidence_intervals, prediction_intervals,
+  return_diagnostics, return_residuals,
+  return_robustness_weights, return_gradient, zero_weight_fallback,
+  auto_converge, cv_fractions, cv_method, cv_k, parallel,
+  degree, dimensions, distance_metric,
+  weighted_metric_weights,
+  surface_mode, return_se, return_sorted,
+  cell, interpolation_vertices, boundary_degree_fallback, cv_seed, missing,
+  retain_model
 ) {
     .Call(
         wrap__RLoess__new, fraction, iterations, weight_function,
@@ -42,6 +42,10 @@ RLoess$predict <- function(new_x, return_se, confidence_level, prediction_level,
     .Call(wrap__RLoess__predict, self, new_x, return_se, confidence_level, prediction_level, return_derivative, extrapolation, max_extrapolation_distance, max_neighbor_distance)
 }
 
+RLoess$close <- function() {
+    .Call(wrap__RLoess__close, self)
+}
+
 #' @export
 `$.RLoess` <- function(self, name) {
     func <- RLoess[[name]]
@@ -55,15 +59,15 @@ RLoess$predict <- function(new_x, return_se, confidence_level, prediction_level,
 RStreamingLoess <- new.env(parent = emptyenv())
 
 RStreamingLoess$new <- function(
-    fraction, chunk_size, overlap, iterations,
-    weight_function, robustness_method,
-    scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
-    return_diagnostics, return_residuals, return_robustness_weights,
-    return_gradient,
-    confidence_intervals, prediction_intervals, return_se,
-    merge_strategy, parallel, degree, dimensions,
-    distance_metric, weighted_metric_weights, surface_mode,
-    cell, interpolation_vertices, boundary_degree_fallback, missing
+  fraction, chunk_size, overlap, iterations,
+  weight_function, robustness_method,
+  scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
+  return_diagnostics, return_residuals, return_robustness_weights,
+  return_gradient,
+  confidence_intervals, prediction_intervals, return_se,
+  merge_strategy, parallel, degree, dimensions,
+  distance_metric, weighted_metric_weights, surface_mode,
+  cell, interpolation_vertices, boundary_degree_fallback, missing
 ) {
     .Call(
         wrap__RStreamingLoess__new, fraction, chunk_size, overlap, iterations,
@@ -91,6 +95,10 @@ RStreamingLoess$finalize <- function() {
     .Call(wrap__RStreamingLoess__finalize, self)
 }
 
+RStreamingLoess$close <- function() {
+    .Call(wrap__RStreamingLoess__close, self)
+}
+
 #' @export
 `$.RStreamingLoess` <- function(self, name) {
     func <- RStreamingLoess[[name]]
@@ -104,14 +112,14 @@ RStreamingLoess$finalize <- function() {
 ROnlineLoess <- new.env(parent = emptyenv())
 
 ROnlineLoess$new <- function(
-    fraction, window_capacity, min_points, iterations,
-    weight_function, robustness_method,
-    scaling_method, boundary_policy, zero_weight_fallback, update_mode,
-    auto_converge, return_robustness_weights, return_gradient,
-    confidence_intervals, prediction_intervals, return_se,
-    degree, dimensions, distance_metric,
-    weighted_metric_weights, surface_mode,
-    cell, interpolation_vertices, boundary_degree_fallback, missing
+  fraction, window_capacity, min_points, iterations,
+  weight_function, robustness_method,
+  scaling_method, boundary_policy, zero_weight_fallback, update_mode,
+  auto_converge, return_robustness_weights, return_gradient,
+  confidence_intervals, prediction_intervals, return_se,
+  degree, dimensions, distance_metric,
+  weighted_metric_weights, surface_mode,
+  cell, interpolation_vertices, boundary_degree_fallback, missing
 ) {
     .Call(
         wrap__ROnlineLoess__new, fraction, window_capacity, min_points,
@@ -138,14 +146,18 @@ ROnlineLoess$window_diagnostics <- function() {
 }
 
 ROnlineLoess$predict_window <- function(
-    new_x, outputs, confidence_level, prediction_level, extrapolation,
-    max_extrapolation_distance, max_neighbor_distance
+  new_x, outputs, confidence_level, prediction_level, extrapolation,
+  max_extrapolation_distance, max_neighbor_distance
 ) {
     .Call(
         wrap__ROnlineLoess__predict_window, self, new_x, outputs,
         confidence_level, prediction_level, extrapolation,
         max_extrapolation_distance, max_neighbor_distance
     )
+}
+
+ROnlineLoess$close <- function() {
+    .Call(wrap__ROnlineLoess__close, self)
 }
 
 #' @export

@@ -2,6 +2,9 @@
 #' @srrstats {G5.5} Fixed random seeds.
 #' @srrstats {G5.8} Edge cases: min data, window > data.
 #' @srrstats {RE4.0} Robustness iterations tested.
+ready_points <- function(results) {
+    Filter(function(r) identical(r$status, "ready"), results)
+}
 test_that("OnlineLoess basic functionality works", {
     set.seed(42)
     x <- 1:100
@@ -13,11 +16,11 @@ test_that("OnlineLoess basic functionality works", {
         min_points = 10
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
-    non_null <- Filter(Negate(is.null), results)
+    non_null <- ready_points(results)
 
     expect_gt(length(non_null), 0)
-    expect_true("y" %in% names(non_null[[1]]))
-    expect_type(non_null[[1]]$y, "double")
+    expect_true("y" %in% names(non_null[[1]]$point))
+    expect_type(non_null[[1]]$point$y, "double")
 })
 
 test_that("OnlineLoess supports multivariate coordinate vectors", {
@@ -33,7 +36,7 @@ test_that("OnlineLoess supports multivariate coordinate vectors", {
     results <- lapply(seq_along(points), function(i) {
         add_point(ol, points[[i]], i - 1)
     })
-    result <- Filter(Negate(is.null), results)[[1]]
+    result <- ready_points(results)[[1]]$point
 
     expect_length(result$gradient, 2)
     expect_error(add_point(ol, 1, 2), "exactly 2 values")
@@ -97,8 +100,8 @@ test_that("OnlineLoess window capacity works", {
         function(i) add_point(ol_large, x[i], y[i])
     )
 
-    expect_gt(length(Filter(Negate(is.null), results_small)), 0)
-    expect_gt(length(Filter(Negate(is.null), results_large)), 0)
+    expect_gt(length(ready_points(results_small)), 0)
+    expect_gt(length(ready_points(results_large)), 0)
 })
 
 test_that("OnlineLoess min_points parameter works", {
@@ -113,13 +116,15 @@ test_that("OnlineLoess min_points parameter works", {
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
 
-    # First 4 calls (before min_points = 5) should return NULL
-    expect_null(results[[1]])
-    expect_null(results[[4]])
+    # First 4 calls (before min_points = 5) should still be filling
+    expect_identical(results[[1]]$status, "filling")
+    expect_null(results[[1]]$point)
+    expect_identical(results[[4]]$status, "filling")
+    expect_null(results[[4]]$point)
     # After min_points points, should return a result
-    non_null <- Filter(Negate(is.null), results)
+    non_null <- ready_points(results)
     expect_gt(length(non_null), 0)
-    expect_type(non_null[[1]]$y, "double")
+    expect_type(non_null[[1]]$point$y, "double")
 })
 
 test_that("OnlineLoess update modes work", {
@@ -147,8 +152,8 @@ test_that("OnlineLoess update modes work", {
         function(i) add_point(ol_incr, x[i], y[i])
     )
 
-    expect_gt(length(Filter(Negate(is.null), results_full)), 0)
-    expect_gt(length(Filter(Negate(is.null), results_incr)), 0)
+    expect_gt(length(ready_points(results_full)), 0)
+    expect_gt(length(ready_points(results_incr)), 0)
 })
 
 test_that("OnlineLoess handles edge cases", {
@@ -161,7 +166,7 @@ test_that("OnlineLoess handles edge cases", {
         min_points = 3
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
-    non_null <- Filter(Negate(is.null), results)
+    non_null <- ready_points(results)
     expect_gt(length(non_null), 0)
 
     # Window larger than data
@@ -171,7 +176,7 @@ test_that("OnlineLoess handles edge cases", {
         min_points = 3
     )
     results2 <- lapply(seq_along(x), function(i) add_point(ol2, x[i], y[i]))
-    non_null2 <- Filter(Negate(is.null), results2)
+    non_null2 <- ready_points(results2)
     expect_gt(length(non_null2), 0)
 })
 
@@ -202,8 +207,8 @@ test_that("OnlineLoess robustness works", {
         function(i) add_point(ol_robust, x[i], y[i])
     )
 
-    expect_gt(length(Filter(Negate(is.null), results_no_robust)), 0)
-    expect_gt(length(Filter(Negate(is.null), results_robust)), 0)
+    expect_gt(length(ready_points(results_no_robust)), 0)
+    expect_gt(length(ready_points(results_robust)), 0)
 })
 
 # ---- Parameter coverage ----
@@ -219,15 +224,28 @@ test_that("OnlineLoess: zero_weight_fallback", {
             zero_weight_fallback = zwf
         )
         r <- add_point(ol, x[1], y[1])
-        # NULL until min_points reached, or a list with y
-        expect_true(is.null(r) || "y" %in% names(r))
+        expect_true(r$status %in% c("filling", "ready", "dropped"))
     }
 })
 
-test_that("OnlineLoess: missing = \"drop\" ignores non-finite point", {
-    ol <- OnlineLoess(fraction = 0.5, window_capacity = 10, missing = "drop")
-    result <- add_point(ol, 1.0, NaN)
-    expect_null(result)
+test_that("OnlineLoess: missing = \"drop\" distinguishes drop from filling", {
+    ol <- OnlineLoess(
+        fraction = 0.5,
+        window_capacity = 10,
+        min_points = 3,
+        missing = "drop"
+    )
+    filling <- add_point(ol, 0.0, 0.0)
+    expect_identical(filling$status, "filling")
+    expect_null(filling$point)
+
+    dropped <- add_point(ol, 1.0, NaN)
+    expect_identical(dropped$status, "dropped")
+    expect_null(dropped$point)
+
+    still_filling <- add_point(ol, 2.0, 4.0)
+    expect_identical(still_filling$status, "filling")
+    expect_null(still_filling$point)
 })
 
 test_that("OnlineLoess: degree, distance_metric, surface_mode, return_se", {
@@ -244,9 +262,9 @@ test_that("OnlineLoess: degree, distance_metric, surface_mode, return_se", {
         outputs = "se"
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
-    non_null <- Filter(Negate(is.null), results)
+    non_null <- ready_points(results)
     expect_gt(length(non_null), 0)
-    expect_type(non_null[[1]]$y, "double")
+    expect_type(non_null[[1]]$point$y, "double")
 })
 
 test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge", {
@@ -264,7 +282,7 @@ test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge", {
         outputs = "weights"
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
-    non_null <- Filter(Negate(is.null), results)
+    non_null <- ready_points(results)
     expect_gt(length(non_null), 0)
 })
 
@@ -296,7 +314,8 @@ test_that("OnlineLoess: CI/PI under update_mode = \"full\"", {
     x <- as.double(0:5)
     y <- as.double(2 * x + 1)
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
-    last <- results[[length(results)]]
+    last <- ready_points(results)
+    last <- last[[length(last)]]$point
 
     expect_false(is.null(last$confidence_lower))
     expect_false(is.null(last$prediction_lower))

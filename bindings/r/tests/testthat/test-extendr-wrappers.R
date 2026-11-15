@@ -126,12 +126,12 @@ test_that("ROnlineLoess generated accessors dispatch add_point", {
     y <- as.double(cos(x))
 
     results <- lapply(seq_along(x), function(i) handle$add_point(x[i], y[i]))
-    non_null <- Filter(Negate(is.null), results)
+    ready <- Filter(function(r) identical(r$status, "ready"), results)
 
-    expect_gt(length(non_null), 0)
+    expect_gt(length(ready), 0)
     has_y <- vapply(
-        non_null,
-        function(r) "y" %in% names(r),
+        ready,
+        function(r) "y" %in% names(r$point),
         logical(1)
     )
     expect_true(all(has_y))

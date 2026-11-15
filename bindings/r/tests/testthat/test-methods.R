@@ -142,8 +142,12 @@ test_that("online methods reject malformed inputs and unused arguments", {
     expect_error(add_point(model, 1, 1, typo = 1), "unused arguments")
     expect_error(window_diagnostics(model, typo = 1), "unused arguments")
     expect_error(predict_window(model, 1, typo = 1), "unused arguments")
-    expect_null(add_point(model, 1L, 3L, weight = 0L))
-    expect_type(add_point(model, 2L, 5L, weight = 1L)$y, "double")
+    first <- add_point(model, 1L, 3L, weight = 0L)
+    expect_identical(first$status, "filling")
+    expect_null(first$point)
+    second <- add_point(model, 2L, 5L, weight = 1L)
+    expect_identical(second$status, "ready")
+    expect_type(second$point$y, "double")
 })
 
 test_that("retained prediction validates query shapes and gradient aliases", {

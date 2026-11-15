@@ -29,7 +29,8 @@ immediately.
 `window_capacity = 25` limits the internal buffer to the 25 most recent
 observations; each `add_point` call costs O(window) rather than growing with
 total history. `min_points = 5` suppresses output until the window holds enough
-points for a stable fit — calls made before that threshold return `NULL`.
+points for a stable fit — calls made before that threshold return
+`status = "filling"`.
 `update_mode = "incremental"` re-fits only the most recent point rather than the
 full window, halving typical latency at a modest accuracy cost.
 
@@ -50,8 +51,8 @@ model <- OnlineLoess(
 )
 for (i in seq_along(times)) {
     result <- add_point(model, times[i], temperatures[i])
-    if (!is.null(result))
-        cat(sprintf("Time %d: %.2f\n", times[i], result$y))
+    if (identical(result$status, "ready"))
+        cat(sprintf("Time %d: %.2f\n", times[i], result$point$y))
     if (i >= 10) break  # print only the first few outputs
 }
 ```
@@ -77,10 +78,10 @@ n_out <- 0L
 
 for (i in seq_len(n)) {
     result <- add_point(model, times[i], signal[i])
-    if (!is.null(result)) {
+    if (identical(result$status, "ready")) {
         n_out <- n_out + 1L
         smoothed_x[n_out] <- times[i]
-        smoothed_y[n_out] <- result$y
+        smoothed_y[n_out] <- result$point$y
     }
 }
 

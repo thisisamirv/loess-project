@@ -29,8 +29,8 @@
 #'   after each addition.
 #' @param missing Policy for a non-finite (NaN/Inf) \code{x} or \code{y} value
 #'   passed to \code{\link{add_point}}: \code{"error"} (default) raises an
-#'   error, \code{"drop"} silently ignores the point (returns \code{NULL})
-#'   instead of adding it to the window.
+#'   error, \code{"drop"} silently ignores the point (\code{status}
+#'   \code{"dropped"}) instead of adding it to the window.
 #' @param dimensions Number of predictor dimensions; each \code{add_point()}
 #'   call must provide one x coordinate per dimension.
 #'
@@ -42,7 +42,9 @@
 #' smoothed <- numeric(0)
 #' for (i in seq_along(x)) {
 #'     result <- add_point(model, x[i], y[i])
-#'     if (!is.null(result)) smoothed <- c(smoothed, result$y)
+#'     if (identical(result$status, "ready")) {
+#'         smoothed <- c(smoothed, result$point$y)
+#'     }
 #' }
 #' head(smoothed, 5)
 #' @export

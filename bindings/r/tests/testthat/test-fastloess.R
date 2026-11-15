@@ -233,8 +233,12 @@ test_that("grouped outputs work across all R adapters and prediction", {
     )
     latest <- NULL
     for (index in seq_along(sorted_x)) {
-        latest <- add_point(online, sorted_x[index], sorted_y[index])
+        result <- add_point(online, sorted_x[index], sorted_y[index])
+        if (identical(result$status, "ready")) {
+            latest <- result$point
+        }
     }
+    expect_false(is.null(latest))
     expect_false(is.null(latest$robustness_weight))
     expect_length(latest$gradient, 1L)
     expect_false(is.null(latest$standard_error))
