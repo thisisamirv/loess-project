@@ -35,7 +35,8 @@ final class NativeResult {
     final double[] leverage;
     final int dimensions;
     final boolean hasStats;
-    final long predictHandle;
+    /** Cleared by {@link #takePredictHandle()} once ownership moves to Java. */
+    private long predictHandle;
 
     // Constructed exclusively by the native layer (JNI bypasses normal access checks).
     @SuppressWarnings("unused") // called by JNI
@@ -100,5 +101,12 @@ final class NativeResult {
         this.dimensions = dimensions;
         this.hasStats = hasStats;
         this.predictHandle = predictHandle;
+    }
+
+    /** Takes ownership of the predict handle, leaving {@code 0} for subsequent wraps. */
+    synchronized long takePredictHandle() {
+        long handle = predictHandle;
+        predictHandle = 0L;
+        return handle;
     }
 }

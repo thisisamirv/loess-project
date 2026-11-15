@@ -1374,8 +1374,7 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
         }
         let processor = unsafe { &mut *ptr };
         let coordinates = unsafe { from_raw_parts(x, x_n) };
-        let dropped_candidate =
-            coordinates.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
+        let dropped_candidate = coordinates.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
 
         match processor.inner.add_point_weighted(coordinates, y, weight) {
             Err(e) => JlOnlineOutput {

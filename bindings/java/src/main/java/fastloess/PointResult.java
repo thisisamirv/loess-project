@@ -5,8 +5,9 @@ import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
 /**
- * A single smoothed output produced by
- * {@link OnlineLoess#addPoint(double, double)}.
+ * A single smoothed output produced when
+ * {@link OnlineLoess#addPoint(double, double)} returns
+ * {@link OnlinePointStatus#READY}.
  *
  * @param y the smoothed value
  * @param standardError the standard error of the smoothed value, if computed

@@ -6,6 +6,10 @@ import java.util.OptionalInt;
 /**
  * The result of fitting or updating a LOESS model.
  *
+ * <p>
+ * When {@code retainModel} was set, {@link #predictModel()} holds a native
+ * handle — close this result (or the nested {@link PredictModel}) to free it.
+ *
  * @param x the x values, in the same order as the input
  * @param y the smoothed y values
  * @param standardErrors per-point standard errors, if computed
@@ -47,9 +51,10 @@ public record Result(
         int dimensions,
         Optional<Diagnostics> diagnostics,
         Optional<HatMatrixStats> hatMatrix,
-        Optional<PredictModel> predictModel) {
+        Optional<PredictModel> predictModel) implements AutoCloseable {
 
     static Result fromNative(NativeResult r) {
+        long predictHandle = r.takePredictHandle();
         return new Result(
                 r.x,
                 r.y,
@@ -67,6 +72,15 @@ public record Result(
                 r.dimensions,
                 r.hasDiagnostics ? Optional.of(Diagnostics.fromNative(r)) : Optional.empty(),
                 r.hasStats ? Optional.of(HatMatrixStats.fromNative(r)) : Optional.empty(),
-                r.predictHandle == 0 ? Optional.empty() : Optional.of(new PredictModel(r.predictHandle)));
+                predictHandle == 0L ? Optional.empty() : Optional.of(new PredictModel(predictHandle)));
+    }
+
+    /**
+     * Frees any retained {@link PredictModel}. Idempotent; safe if the nested
+     * model was already closed.
+     */
+    @Override
+    public void close() {
+        predictModel.ifPresent(PredictModel::close);
     }
 }

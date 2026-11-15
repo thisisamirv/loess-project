@@ -866,11 +866,10 @@ pub unsafe extern "C" fn go_streaming_new(
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
-        let iterations =
-            match shared_parse::require_non_negative_usize("iterations", iterations) {
-                Ok(v) => v,
-                Err(e) => return null_with_error(&e),
-            };
+        let iterations = match shared_parse::require_non_negative_usize("iterations", iterations) {
+            Ok(v) => v,
+            Err(e) => return null_with_error(&e),
+        };
         let degree_str = (!degree.is_null()).then_some(shared_parse::parse_c_str_or_default(
             degree,
             shared_parse::DEFAULT_DEGREE,
@@ -1126,11 +1125,10 @@ pub unsafe extern "C" fn go_online_new(
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
-        let iterations =
-            match shared_parse::require_non_negative_usize("iterations", iterations) {
-                Ok(v) => v,
-                Err(e) => return null_with_error(&e),
-            };
+        let iterations = match shared_parse::require_non_negative_usize("iterations", iterations) {
+            Ok(v) => v,
+            Err(e) => return null_with_error(&e),
+        };
 
         let configured_dimensions = dimensions.max(1) as usize;
         let degree_str = (!degree.is_null()).then_some(shared_parse::parse_c_str_or_default(
@@ -1229,8 +1227,7 @@ fn go_online_add_point_impl(
             return go_online_error_output(shared_parse::MODEL_POINTER_IS_NULL);
         }
         let loess = unsafe { &mut *ptr };
-        let dropped_candidate =
-            x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
+        let dropped_candidate = x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
 
         if let Some(model) = &mut loess.model {
             match model.add_point_weighted(x, y, weight) {

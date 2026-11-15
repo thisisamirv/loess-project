@@ -8,7 +8,7 @@ import java.util.Optional;
  */
 public final class OnlineLoess implements AutoCloseable {
 
-    private long handle;
+    private final NativeHandles.Owned nativeHandle;
     private final int dimensions;
 
     /**
@@ -19,7 +19,7 @@ public final class OnlineLoess implements AutoCloseable {
     public OnlineLoess(OnlineOptions options) {
         Options c = options.common;
         this.dimensions = c.dimensions;
-        this.handle = NativeBridge.onlineNew(
+        long handle = NativeBridge.onlineNew(
                 c.fraction,
                 c.iterations,
                 c.weightFunction,
@@ -45,18 +45,26 @@ public final class OnlineLoess implements AutoCloseable {
                 NativeBridge.boolSentinel(c.boundaryDegreeFallback),
                 c.weightedMetricWeights,
                 c.missing);
+        this.nativeHandle = new NativeHandles.Owned(handle, NativeBridge::onlineFree);
     }
 
     /**
      * Adds a one-dimensional point to the model. For multivariate models, use
      * {@link #addPoint(double[], double)}.
      *
+     * <p>
+     * {@link OnlinePointStatus#FILLING} while fewer than {@code minPoints}
+     * finite observations have been accepted;
+     * {@link OnlinePointStatus#READY} once smoothing begins (see
+     * {@link AddPointResult#point()});
+     * {@link OnlinePointStatus#DROPPED} when {@code missing = "drop"} ignores a
+     * non-finite {@code x} or {@code y}.
+     *
      * @param x the x value
      * @param y the y value
-     * @return the smoothed output, or {@link Optional#empty()} if not enough
-     * points have been seen yet
+     * @return status and optional smoothed output
      */
-    public synchronized Optional<PointResult> addPoint(double x, double y) {
+    public synchronized AddPointResult addPoint(double x, double y) {
         return addPoint(new double[]{x}, y, 1.0);
     }
 
@@ -67,22 +75,20 @@ public final class OnlineLoess implements AutoCloseable {
      * @param x the predictor value
      * @param y the response value
      * @param weight the case weight
-     * @return the smoothed output, or empty while the window is filling
+     * @return status and optional smoothed output
      */
-    public synchronized Optional<PointResult> addPoint(double x, double y, double weight) {
+    public synchronized AddPointResult addPoint(double x, double y, double weight) {
         return addPoint(new double[]{x}, y, weight);
     }
 
     /**
      * Adds a point with one coordinate per configured predictor dimension.
-     * Returns a smoothed output once at least {@code minPoints} have been seen,
-     * or {@link Optional#empty()} otherwise.
      *
      * @param x predictor coordinates
      * @param y response value
-     * @return the smoothed output, or empty while the window is filling
+     * @return status and optional smoothed output
      */
-    public synchronized Optional<PointResult> addPoint(double[] x, double y) {
+    public synchronized AddPointResult addPoint(double[] x, double y) {
         return addPoint(x, y, 1.0);
     }
 
@@ -93,15 +99,18 @@ public final class OnlineLoess implements AutoCloseable {
      * @param x predictor coordinates
      * @param y response value
      * @param weight finite, non-negative case weight
-     * @return the smoothed output, or empty while the window is filling
+     * @return status and optional smoothed output
      */
-    public synchronized Optional<PointResult> addPoint(double[] x, double y, double weight) {
+    public synchronized AddPointResult addPoint(double[] x, double y, double weight) {
         checkOpen();
         if (x == null || x.length != dimensions) {
             throw new IllegalArgumentException("x must contain exactly " + dimensions + " predictor coordinates");
         }
-        NativeOnlineOutput o = NativeBridge.onlineAddPoint(handle, x, y, weight);
-        return o.hasValue ? Optional.of(PointResult.fromNative(o)) : Optional.empty();
+        NativeOnlineOutput o = NativeBridge.onlineAddPoint(nativeHandle.get(), x, y, weight);
+        OnlinePointStatus status = OnlinePointStatus.fromNative(o.hasValue);
+        return new AddPointResult(
+                status,
+                status.isReady() ? Optional.of(PointResult.fromNative(o)) : Optional.empty());
     }
 
     /**
@@ -112,7 +121,7 @@ public final class OnlineLoess implements AutoCloseable {
      */
     public synchronized Optional<Diagnostics> windowDiagnostics() {
         checkOpen();
-        double[] values = NativeBridge.onlineWindowDiagnostics(handle);
+        double[] values = NativeBridge.onlineWindowDiagnostics(nativeHandle.get());
         if (values == null || values.length == 0) {
             return Optional.empty();
         }
@@ -138,8 +147,9 @@ public final class OnlineLoess implements AutoCloseable {
      */
     public synchronized PredictResult predictWindow(double[] newX, PredictOptions options) {
         checkOpen();
+        Inputs.requireQueryX(newX);
         NativePredictResult result = NativeBridge.onlinePredictWindow(
-                handle,
+                nativeHandle.get(),
                 newX,
                 options.outputs().contains("se"),
                 options.intervals() == null ? Double.NaN : options.intervals().confidence(),
@@ -152,16 +162,13 @@ public final class OnlineLoess implements AutoCloseable {
     }
 
     private void checkOpen() {
-        if (handle == 0) {
+        if (!nativeHandle.isOpen()) {
             throw new IllegalStateException("OnlineLoess has already been closed");
         }
     }
 
     @Override
     public synchronized void close() {
-        if (handle != 0) {
-            NativeBridge.onlineFree(handle);
-            handle = 0;
-        }
+        nativeHandle.close();
     }
 }

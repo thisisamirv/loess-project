@@ -6,7 +6,8 @@ package fastloess;
  */
 public final class Loess implements AutoCloseable {
 
-    private long handle;
+    private final NativeHandles.Owned nativeHandle;
+    private final int dimensions;
 
     /**
      * Creates a new batch model from the given options.
@@ -14,7 +15,8 @@ public final class Loess implements AutoCloseable {
      * @param options the model configuration
      */
     public Loess(Options options) {
-        this.handle = NativeBridge.loessNew(
+        this.dimensions = options.dimensions;
+        long handle = NativeBridge.loessNew(
                 options.fraction,
                 options.iterations,
                 options.weightFunction,
@@ -45,8 +47,9 @@ public final class Loess implements AutoCloseable {
                 options.weightedMetricWeights,
                 options.missing,
                 options.retainModel);
+        this.nativeHandle = new NativeHandles.Owned(handle, NativeBridge::loessFree);
         if (options.cvSeed != null) {
-            NativeBridge.loessSetCvSeed(handle, options.cvSeed);
+            NativeBridge.loessSetCvSeed(nativeHandle.get(), options.cvSeed);
         }
     }
 
@@ -55,7 +58,8 @@ public final class Loess implements AutoCloseable {
      *
      * @param x the x values
      * @param y the y values
-     * @return the fit result
+     * @return the fit result (close it, or close {@link Result#predictModel()},
+     * when {@code retainModel} was set)
      */
     public synchronized Result fit(double[] x, double[] y) {
         return fit(x, y, null);
@@ -68,31 +72,25 @@ public final class Loess implements AutoCloseable {
      * @param y the y values
      * @param customWeights non-negative per-observation weights, or
      * {@code null}
-     * @return the fit result
+     * @return the fit result (close it, or close {@link Result#predictModel()},
+     * when {@code retainModel} was set)
      */
     public synchronized Result fit(double[] x, double[] y, double[] customWeights) {
         checkOpen();
-        if (customWeights != null && customWeights.length == 0) {
-            throw new IllegalArgumentException("customWeights must not be empty");
-        }
-        if (customWeights != null && customWeights.length != x.length) {
-            throw new IllegalArgumentException("customWeights must match x and y length");
-        }
-        NativeResult r = NativeBridge.loessFit(handle, x, y, customWeights);
+        Inputs.requireXy(x, y, dimensions);
+        Inputs.requireCustomWeights(customWeights, y.length);
+        NativeResult r = NativeBridge.loessFit(nativeHandle.get(), x, y, customWeights);
         return Result.fromNative(r);
     }
 
     private void checkOpen() {
-        if (handle == 0) {
+        if (!nativeHandle.isOpen()) {
             throw new IllegalStateException("Loess has already been closed");
         }
     }
 
     @Override
     public synchronized void close() {
-        if (handle != 0) {
-            NativeBridge.loessFree(handle);
-            handle = 0;
-        }
+        nativeHandle.close();
     }
 }

@@ -36,7 +36,8 @@ const PREDICT_RESULT_CLASS: &JNIStr = jni_str!("fastloess/NativePredictResult");
 const RESULT_CTOR_SIG: MethodSignature<'static, 'static> =
     jni_sig!("([D[D[D[D[D[D[D[D[D[D[DDIDDDDDDDZDDDDD[DIZJ)V");
 // Keep in sync with NativeOnlineOutput's constructor parameter list.
-const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDDDDIDDDD[D)V");
+// has_value is int: 1 ready, 0 filling, -1 dropped under missing="drop".
+const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(IDDDDIDDDD[D)V");
 // Keep in sync with NativePredictResult's constructor parameter list.
 const PREDICT_RESULT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("([D[D[D[D[D[D[D)V");
 
@@ -860,6 +861,8 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
         }
         let online = unsafe { &mut *(handle as *mut JavaOnlineLoess) };
         let x_vec = jarray_to_vec(env, &x)?;
+        // Match C++: only x coords + y; weight finiteness is not part of dropped_candidate.
+        let dropped_candidate = x_vec.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
         let point = online
             .model
             .add_point_weighted(&x_vec, y, weight)
@@ -879,7 +882,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
             gradient,
         ) = match point {
             None => (
-                false,
+                if dropped_candidate { -1 } else { 0 },
                 f64::NAN,
                 f64::NAN,
                 f64::NAN,
@@ -894,7 +897,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
             Some(o) => {
                 let (se, res, rw, iters, cl, cu, pl, pu) = shared_parse::extract_online_output(&o);
                 (
-                    true,
+                    1,
                     o.y,
                     se,
                     res,
@@ -915,7 +918,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
             class,
             ONLINE_OUTPUT_CTOR_SIG,
             &[
-                JValue::Bool(has_value as jboolean),
+                JValue::Int(has_value),
                 JValue::Double(y_val),
                 JValue::Double(standard_error),
                 JValue::Double(residual),

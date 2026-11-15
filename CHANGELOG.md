@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
+- Breaking change: `OnlineLoess.addPoint` returns `AddPointResult` with `OnlinePointStatus` (`FILLING` / `READY` / `DROPPED`) instead of a bare `Optional<PointResult>`.
 - Bumped `central-publishing-maven-plugin.version` to v0.12.0.
 - Bumped `maven-enforcer-plugin` to v3.7.0 and `maven-surefire-plugin` to v3.6.1.
 
@@ -60,14 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Kept the C++ Spack archive URL stable and made release updates recognize multiline version declarations without duplicating them.
-
-**Julia:**
-
-- Use `usize` / `Csize_t` for FFI length and count fields so Windows LLP64 no longer truncates large `Culong` lengths.
-- Free C results with `try`/`finally`, take `predict_handle` ownership via `jl_loess_take_predict_handle` before `free_result`, and null finalizer handles after free.
-- Distinguish online `missing="drop"` (`:dropped` / `has_value = -1`) from a still-filling window (`nothing` / `has_value = 0`).
-- Reject `append!` of results that carry fit-global state (`cv_scores`, `diagnostics`, `predict_model`, hat summaries).
-- Demote library-discovery `@info` logs to `@debug`.
+- Expose `fastloess_loess_take_predict_handle`; document that `fastloess_loess_free_result` frees any remaining handle (already nulled via full struct reset).
+- Distinguish online `missing="drop"` (`OnlinePointStatus::Dropped` / `has_value = -1`) from a still-filling window (`Filling` / `has_value = 0`); `OnlineOutput::has_value()` is true only when ready.
 
 **Go:**
 
@@ -76,10 +71,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Distinguish online `missing="drop"` (`AddPointDropped` / `has_value = -1`) from a still-filling window (`AddPointFilling` / `has_value = 0`); `AddPoint` and related methods now return `AddPointStatus`.
 - Reject negative Streaming/Online `iterations` instead of casting them to a huge `usize`.
 
-**C++:**
+**Java:**
 
-- Expose `fastloess_loess_take_predict_handle`; document that `fastloess_loess_free_result` frees any remaining handle (already nulled via full struct reset).
-- Distinguish online `missing="drop"` (`OnlinePointStatus::Dropped` / `has_value = -1`) from a still-filling window (`Filling` / `has_value = 0`); `OnlineOutput::has_value()` is true only when ready.
+- Distinguish online `missing="drop"` (`OnlinePointStatus.DROPPED` / `has_value = -1`) from a still-filling window (`FILLING` / `has_value = 0`); `addPoint` returns `AddPointResult`.
+- Close retained `PredictModel` handles through `Result` (`AutoCloseable`) with take-once ownership and a `Cleaner` safety net on native-owning types.
+- Validate flattened `x` length (`y.length * dimensions`) and `customWeights` against `y` before JNI.
+
+**Julia:**
+
+- Use `usize` / `Csize_t` for FFI length and count fields so Windows LLP64 no longer truncates large `Culong` lengths.
+- Free C results with `try`/`finally`, take `predict_handle` ownership via `jl_loess_take_predict_handle` before `free_result`, and null finalizer handles after free.
+- Distinguish online `missing="drop"` (`:dropped` / `has_value = -1`) from a still-filling window (`nothing` / `has_value = 0`).
+- Reject `append!` of results that carry fit-global state (`cv_scores`, `diagnostics`, `predict_model`, hat summaries).
+- Demote library-discovery `@info` logs to `@debug`.
 
 ## 3.0.0
 

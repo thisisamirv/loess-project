@@ -161,20 +161,19 @@ class LoessTest {
                 .intervals(IntervalsOptions.builder().confidence(0.90).prediction(0.95).build())
                 .retainModel(true)
                 .build();
-        try (Loess model = new Loess(options)) {
-            Result result = model.fit(x, y);
+        try (Loess model = new Loess(options);
+                Result result = model.fit(x, y);
+                PredictModel predictModel = result.predictModel().orElseThrow()) {
             assertTrue(result.confidenceLower().isPresent());
             assertTrue(result.predictionLower().isPresent());
-            try (PredictModel predictModel = result.predictModel().orElseThrow()) {
-                PredictResult prediction = predictModel.predict(
-                        new double[]{4.5}, PredictOptions.builder().outputs("se", "gradient")
-                                .intervals(IntervalsOptions.builder().confidence(0.90).prediction(0.95).build())
-                                .build());
-                assertTrue(prediction.confidenceLower().isPresent());
-                assertTrue(prediction.predictionLower().isPresent());
-                assertEquals(1, prediction.standardErrors().orElseThrow().length);
-                assertEquals(1, prediction.derivative().orElseThrow().length);
-            }
+            PredictResult prediction = predictModel.predict(
+                    new double[]{4.5}, PredictOptions.builder().outputs("se", "gradient")
+                            .intervals(IntervalsOptions.builder().confidence(0.90).prediction(0.95).build())
+                            .build());
+            assertTrue(prediction.confidenceLower().isPresent());
+            assertTrue(prediction.predictionLower().isPresent());
+            assertEquals(1, prediction.standardErrors().orElseThrow().length);
+            assertEquals(1, prediction.derivative().orElseThrow().length);
         }
     }
 

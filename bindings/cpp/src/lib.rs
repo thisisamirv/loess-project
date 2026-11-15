@@ -1428,8 +1428,7 @@ unsafe fn online_add_point_impl(
         return online_error_output(shared_parse::MODEL_POINTER_IS_NULL);
     }
     let loess = unsafe { &mut *ptr };
-    let dropped_candidate =
-        x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
+    let dropped_candidate = x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
     let Some(model) = &mut loess.model else {
         return online_error_output(shared_parse::MODEL_NOT_INITIALIZED);
     };

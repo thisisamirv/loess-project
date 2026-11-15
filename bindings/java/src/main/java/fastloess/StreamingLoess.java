@@ -6,7 +6,8 @@ package fastloess;
  */
 public final class StreamingLoess implements AutoCloseable {
 
-    private long handle;
+    private final NativeHandles.Owned nativeHandle;
+    private final int dimensions;
 
     /**
      * Creates a new streaming model from the given options.
@@ -15,7 +16,8 @@ public final class StreamingLoess implements AutoCloseable {
      */
     public StreamingLoess(StreamingOptions options) {
         Options c = options.common;
-        this.handle = NativeBridge.streamingNew(
+        this.dimensions = c.dimensions;
+        long handle = NativeBridge.streamingNew(
                 c.fraction,
                 c.iterations,
                 c.weightFunction,
@@ -44,6 +46,7 @@ public final class StreamingLoess implements AutoCloseable {
                 NativeBridge.boolSentinel(c.boundaryDegreeFallback),
                 c.weightedMetricWeights,
                 c.missing);
+        this.nativeHandle = new NativeHandles.Owned(handle, NativeBridge::streamingFree);
     }
 
     /**
@@ -55,7 +58,8 @@ public final class StreamingLoess implements AutoCloseable {
      */
     public synchronized Result processChunk(double[] x, double[] y) {
         checkOpen();
-        NativeResult r = NativeBridge.streamingProcess(handle, x, y);
+        Inputs.requireXy(x, y, dimensions);
+        NativeResult r = NativeBridge.streamingProcess(nativeHandle.get(), x, y);
         return Result.fromNative(r);
     }
 
@@ -69,7 +73,9 @@ public final class StreamingLoess implements AutoCloseable {
      */
     public synchronized Result processChunk(double[] x, double[] y, double[] customWeights) {
         checkOpen();
-        NativeResult r = NativeBridge.streamingProcessWeighted(handle, x, y, customWeights);
+        Inputs.requireXy(x, y, dimensions);
+        Inputs.requireCustomWeights(customWeights, y.length);
+        NativeResult r = NativeBridge.streamingProcessWeighted(nativeHandle.get(), x, y, customWeights);
         return Result.fromNative(r);
     }
 
@@ -80,21 +86,18 @@ public final class StreamingLoess implements AutoCloseable {
      */
     public synchronized Result finish() {
         checkOpen();
-        NativeResult r = NativeBridge.streamingFinalize(handle);
+        NativeResult r = NativeBridge.streamingFinalize(nativeHandle.get());
         return Result.fromNative(r);
     }
 
     private void checkOpen() {
-        if (handle == 0) {
+        if (!nativeHandle.isOpen()) {
             throw new IllegalStateException("StreamingLoess has already been closed");
         }
     }
 
     @Override
     public synchronized void close() {
-        if (handle != 0) {
-            NativeBridge.streamingFree(handle);
-            handle = 0;
-        }
+        nativeHandle.close();
     }
 }

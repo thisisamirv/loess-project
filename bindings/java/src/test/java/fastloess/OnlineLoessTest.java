@@ -3,7 +3,6 @@ package fastloess;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -54,9 +53,9 @@ class OnlineLoessTest {
             double[][] points = {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}};
             double[] responses = {0.0, 1.0, 2.0, 3.0};
             for (int i = 0; i < points.length; i++) {
-                Optional<PointResult> result = model.addPoint(points[i], responses[i]);
-                if (result.isPresent()) {
-                    last = result;
+                AddPointResult result = model.addPoint(points[i], responses[i]);
+                if (result.isReady()) {
+                    last = result.point();
                 }
             }
             assertTrue(last.isPresent());
@@ -73,8 +72,8 @@ class OnlineLoessTest {
         try (OnlineLoess model = new OnlineLoess(OnlineOptions.builder().minPoints(5).build())) {
             boolean sawValue = false;
             for (int i = 0; i < 20; i++) {
-                Optional<PointResult> point = model.addPoint(i, i * 2.0);
-                if (point.isPresent()) {
+                AddPointResult point = model.addPoint(i, i * 2.0);
+                if (point.isReady()) {
                     sawValue = true;
                 }
             }
@@ -83,11 +82,24 @@ class OnlineLoessTest {
     }
 
     @Test
-    void missingDropIgnoresNaNPoint() {
+    void missingDropReportsDroppedDistinctFromFilling() {
         try (OnlineLoess model = new OnlineLoess(
-                OnlineOptions.builder().fraction(0.5).windowCapacity(10).missing("drop").build())) {
-            Optional<PointResult> point = model.addPoint(1.0, Double.NaN);
-            assertFalse(point.isPresent(), "expected the NaN point to be silently ignored");
+                OnlineOptions.builder()
+                        .fraction(0.5)
+                        .windowCapacity(10)
+                        .minPoints(5)
+                        .missing("drop")
+                        .build())) {
+            AddPointResult filling = model.addPoint(0.0, 0.0);
+            assertEquals(OnlinePointStatus.FILLING, filling.status());
+            assertTrue(filling.point().isEmpty());
+
+            AddPointResult dropped = model.addPoint(1.0, Double.NaN);
+            assertEquals(OnlinePointStatus.DROPPED, dropped.status());
+            assertTrue(dropped.point().isEmpty());
+
+            AddPointResult stillFilling = model.addPoint(2.0, 4.0);
+            assertEquals(OnlinePointStatus.FILLING, stillFilling.status());
         }
     }
 
@@ -111,9 +123,9 @@ class OnlineLoessTest {
                         .build())) {
             Optional<PointResult> last = Optional.empty();
             for (int i = 0; i < 6; i++) {
-                Optional<PointResult> current = model.addPoint(i, 2.0 * i + 1.0);
-                if (current.isPresent()) {
-                    last = current;
+                AddPointResult current = model.addPoint(i, 2.0 * i + 1.0);
+                if (current.isReady()) {
+                    last = current.point();
                 }
             }
             PointResult result = last.orElseThrow();
@@ -150,9 +162,9 @@ class OnlineLoessTest {
                         .build())) {
             Optional<PointResult> last = Optional.empty();
             for (int i = 0; i < 6; i++) {
-                Optional<PointResult> point = model.addPoint(i, 2.0 * i + 1.0);
-                if (point.isPresent()) {
-                    last = point;
+                AddPointResult point = model.addPoint(i, 2.0 * i + 1.0);
+                if (point.isReady()) {
+                    last = point.point();
                 }
             }
             assertTrue(last.isPresent());
