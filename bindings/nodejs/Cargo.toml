@@ -19,8 +19,8 @@ crate-type = ["cdylib"]
 fastLoess = { path = "../../crates/fastLoess", version = "3.0", features = [
     "dev",
 ] }
-napi = { version = "3.14", features = ["napi4"] }
-napi-derive = "3.6"
+napi = { version = "3.16", features = ["napi4"] }
+napi-derive = "3.7"
 
 [build-dependencies]
 napi-build = "2.6"
