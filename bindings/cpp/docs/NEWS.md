@@ -3,6 +3,13 @@
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md).
 
 <!-- markdownlint-disable MD024 MD025 -->
+## 3.1.0
+
+### Changed
+
+* Breaking change: renamed the public C ABI from the generic `cpp_*` prefix to `fastloess_*` (for example `fastloess_loess_new`, `fastloess_version`) so symbols do not collide with other bindings.
+* Windows MSVC releases now publish separate Debug and Release shared libraries for vcpkg consumers (both use `/MD` because the Rust MSVC standard library does).
+
 ## 3.0.0
 
 ### Added

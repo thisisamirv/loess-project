@@ -217,7 +217,7 @@ int main() {}
 
 The macros `FASTLOESS_CPP_VERSION_MAJOR`, `FASTLOESS_CPP_VERSION_MINOR`, `FASTLOESS_CPP_VERSION_PATCH`, and `FASTLOESS_CPP_VERSION_STRING` describe the headers used to compile your application. `fastloess.hpp` includes this header automatically.
 
-Use `cpp_version()` to identify the native library loaded at runtime:
+Use `fastloess_version()` to identify the native library loaded at runtime:
 
 ```cpp
 #include <fastloess.hpp>
@@ -225,7 +225,7 @@ Use `cpp_version()` to identify the native library loaded at runtime:
 
 int main() {
  std::cout << "Header version: " << FASTLOESS_CPP_VERSION_STRING << '\n';
- std::cout << "Loaded library version: " << cpp_version() << '\n';
+ std::cout << "Loaded library version: " << fastloess_version() << '\n';
 }
 ```
 

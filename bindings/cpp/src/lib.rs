@@ -82,7 +82,7 @@ where
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn cpp_last_error_message() -> *const c_char {
+pub extern "C" fn fastloess_last_error_message() -> *const c_char {
     CPP_LAST_ERROR.with(|slot| {
         if let Some(msg) = slot.borrow().as_ref() {
             msg.as_ptr()
@@ -94,7 +94,7 @@ pub extern "C" fn cpp_last_error_message() -> *const c_char {
 
 /// Returns the crate version as a static, null-terminated C string.
 #[unsafe(no_mangle)]
-pub extern "C" fn cpp_version() -> *const c_char {
+pub extern "C" fn fastloess_version() -> *const c_char {
     concat!(env!("CARGO_PKG_VERSION"), "\0").as_ptr() as *const c_char
 }
 
@@ -212,8 +212,8 @@ pub struct CppLoessResult {
     pub cv_scores: *mut c_double,
     pub cv_scores_len: usize,
 
-    /// Opaque handle for `cpp_predict()`, non-NULL only if `retain_model` was set to 1.
-    /// Must eventually be freed via `cpp_predict_handle_free`.
+    /// Opaque handle for `fastloess_predict()`, non-NULL only if `retain_model` was set to 1.
+    /// Must eventually be freed via `fastloess_predict_handle_free`.
     pub predict_handle: *mut CppPredictHandle,
 
     /// Error message (NULL if no error)
@@ -354,8 +354,8 @@ pub struct CppOnlineLoess {
     dimensions: usize,
 }
 
-// Opaque handle retained by `cpp_loess_fit` (in `CppLoessResult::predict_handle`, if
-// `retain_model` was set to 1), enabling `cpp_predict()`. Wraps just the lightweight
+// Opaque handle retained by `fastloess_loess_fit` (in `CppLoessResult::predict_handle`, if
+// `retain_model` was set to 1), enabling `fastloess_predict()`. Wraps just the lightweight
 // `Arc<PredictState<f64>>` extracted from the fitted model, not the whole result.
 pub struct CppPredictHandle {
     state: Arc<shared_parse::PredictState<f64>>,
@@ -370,7 +370,7 @@ fn setter_unsupported_eager_lifecycle(name: &str) {
 /// # Safety
 /// Pointers must be valid null-terminated strings or null. Arrays must be valid.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_loess_new(
+pub unsafe extern "C" fn fastloess_loess_new(
     fraction: c_double,
     iterations: c_int,
     weight_function: *const c_char,
@@ -536,7 +536,7 @@ pub unsafe extern "C" fn cpp_loess_new(
 /// # Safety
 /// ptr must be valid.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_loess_set_cv_seed(ptr: *mut CppLoess, seed: u64) {
+pub unsafe extern "C" fn fastloess_loess_set_cv_seed(ptr: *mut CppLoess, seed: u64) {
     with_panic_void(|| {
         if !ptr.is_null() {
             unsafe { (*ptr).cv_seed = Some(seed) };
@@ -553,14 +553,14 @@ pub unsafe extern "C" fn cpp_loess_set_cv_seed(ptr: *mut CppLoess, seed: u64) {
 /// # Safety
 /// `ptr` must be a valid `CppStreamingLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_set_cell(ptr: *mut CppStreamingLoess, cell: c_double) {
+pub unsafe extern "C" fn fastloess_streaming_set_cell(ptr: *mut CppStreamingLoess, cell: c_double) {
     with_panic_void(|| {
         let _ = cell;
         if ptr.is_null() {
             set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        setter_unsupported_eager_lifecycle("cpp_streaming_set_cell");
+        setter_unsupported_eager_lifecycle("fastloess_streaming_set_cell");
     });
 }
 
@@ -569,7 +569,7 @@ pub unsafe extern "C" fn cpp_streaming_set_cell(ptr: *mut CppStreamingLoess, cel
 /// # Safety
 /// `ptr` must be a valid `CppStreamingLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_set_interpolation_vertices(
+pub unsafe extern "C" fn fastloess_streaming_set_interpolation_vertices(
     ptr: *mut CppStreamingLoess,
     vertices: usize,
 ) {
@@ -579,7 +579,7 @@ pub unsafe extern "C" fn cpp_streaming_set_interpolation_vertices(
             set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        setter_unsupported_eager_lifecycle("cpp_streaming_set_interpolation_vertices");
+        setter_unsupported_eager_lifecycle("fastloess_streaming_set_interpolation_vertices");
     });
 }
 
@@ -588,7 +588,7 @@ pub unsafe extern "C" fn cpp_streaming_set_interpolation_vertices(
 /// # Safety
 /// `ptr` must be a valid `CppStreamingLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_set_boundary_degree_fallback(
+pub unsafe extern "C" fn fastloess_streaming_set_boundary_degree_fallback(
     ptr: *mut CppStreamingLoess,
     enabled: c_int,
 ) {
@@ -598,7 +598,7 @@ pub unsafe extern "C" fn cpp_streaming_set_boundary_degree_fallback(
             set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        setter_unsupported_eager_lifecycle("cpp_streaming_set_boundary_degree_fallback");
+        setter_unsupported_eager_lifecycle("fastloess_streaming_set_boundary_degree_fallback");
     });
 }
 
@@ -607,7 +607,7 @@ pub unsafe extern "C" fn cpp_streaming_set_boundary_degree_fallback(
 /// # Safety
 /// `ptr` must be a valid `CppStreamingLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_set_confidence_intervals(
+pub unsafe extern "C" fn fastloess_streaming_set_confidence_intervals(
     ptr: *mut CppStreamingLoess,
     level: c_double,
 ) {
@@ -617,7 +617,7 @@ pub unsafe extern "C" fn cpp_streaming_set_confidence_intervals(
             set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        setter_unsupported_eager_lifecycle("cpp_streaming_set_confidence_intervals");
+        setter_unsupported_eager_lifecycle("fastloess_streaming_set_confidence_intervals");
     });
 }
 
@@ -626,7 +626,7 @@ pub unsafe extern "C" fn cpp_streaming_set_confidence_intervals(
 /// # Safety
 /// `ptr` must be a valid `CppStreamingLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_set_prediction_intervals(
+pub unsafe extern "C" fn fastloess_streaming_set_prediction_intervals(
     ptr: *mut CppStreamingLoess,
     level: c_double,
 ) {
@@ -636,7 +636,7 @@ pub unsafe extern "C" fn cpp_streaming_set_prediction_intervals(
             set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        setter_unsupported_eager_lifecycle("cpp_streaming_set_prediction_intervals");
+        setter_unsupported_eager_lifecycle("fastloess_streaming_set_prediction_intervals");
     });
 }
 
@@ -649,14 +649,14 @@ pub unsafe extern "C" fn cpp_streaming_set_prediction_intervals(
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_set_cell(ptr: *mut CppOnlineLoess, cell: c_double) {
+pub unsafe extern "C" fn fastloess_online_set_cell(ptr: *mut CppOnlineLoess, cell: c_double) {
     with_panic_void(|| {
         let _ = cell;
         if ptr.is_null() {
             set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        setter_unsupported_eager_lifecycle("cpp_online_set_cell");
+        setter_unsupported_eager_lifecycle("fastloess_online_set_cell");
     });
 }
 
@@ -665,7 +665,7 @@ pub unsafe extern "C" fn cpp_online_set_cell(ptr: *mut CppOnlineLoess, cell: c_d
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_set_interpolation_vertices(
+pub unsafe extern "C" fn fastloess_online_set_interpolation_vertices(
     ptr: *mut CppOnlineLoess,
     vertices: usize,
 ) {
@@ -675,7 +675,7 @@ pub unsafe extern "C" fn cpp_online_set_interpolation_vertices(
             set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        setter_unsupported_eager_lifecycle("cpp_online_set_interpolation_vertices");
+        setter_unsupported_eager_lifecycle("fastloess_online_set_interpolation_vertices");
     });
 }
 
@@ -684,7 +684,7 @@ pub unsafe extern "C" fn cpp_online_set_interpolation_vertices(
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_set_boundary_degree_fallback(
+pub unsafe extern "C" fn fastloess_online_set_boundary_degree_fallback(
     ptr: *mut CppOnlineLoess,
     enabled: c_int,
 ) {
@@ -694,7 +694,7 @@ pub unsafe extern "C" fn cpp_online_set_boundary_degree_fallback(
             set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        setter_unsupported_eager_lifecycle("cpp_online_set_boundary_degree_fallback");
+        setter_unsupported_eager_lifecycle("fastloess_online_set_boundary_degree_fallback");
     });
 }
 
@@ -703,7 +703,7 @@ pub unsafe extern "C" fn cpp_online_set_boundary_degree_fallback(
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_set_confidence_intervals(
+pub unsafe extern "C" fn fastloess_online_set_confidence_intervals(
     ptr: *mut CppOnlineLoess,
     level: c_double,
 ) {
@@ -713,7 +713,7 @@ pub unsafe extern "C" fn cpp_online_set_confidence_intervals(
             set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        setter_unsupported_eager_lifecycle("cpp_online_set_confidence_intervals");
+        setter_unsupported_eager_lifecycle("fastloess_online_set_confidence_intervals");
     });
 }
 
@@ -722,7 +722,7 @@ pub unsafe extern "C" fn cpp_online_set_confidence_intervals(
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_set_prediction_intervals(
+pub unsafe extern "C" fn fastloess_online_set_prediction_intervals(
     ptr: *mut CppOnlineLoess,
     level: c_double,
 ) {
@@ -732,7 +732,7 @@ pub unsafe extern "C" fn cpp_online_set_prediction_intervals(
             set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        setter_unsupported_eager_lifecycle("cpp_online_set_prediction_intervals");
+        setter_unsupported_eager_lifecycle("fastloess_online_set_prediction_intervals");
     });
 }
 
@@ -742,7 +742,7 @@ pub unsafe extern "C" fn cpp_online_set_prediction_intervals(
 /// `ptr` must be a valid CppLoess pointer. `x_values` must be a valid array of length `x_n`
 /// (= n_observations * dimensions), `y_values` must be a valid array of length `y_n` (= n_observations).
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_loess_fit(
+pub unsafe extern "C" fn fastloess_loess_fit(
     ptr: *mut CppLoess,
     x_values: *const c_double,
     x_n: usize,
@@ -812,9 +812,9 @@ fn configured_batch_builder(
 /// Free model.
 ///
 /// # Safety
-/// `ptr` must be a valid pointer returned by `cpp_loess_new` or null.
+/// `ptr` must be a valid pointer returned by `fastloess_loess_new` or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_loess_free(ptr: *mut CppLoess) {
+pub unsafe extern "C" fn fastloess_loess_free(ptr: *mut CppLoess) {
     with_panic_void(|| {
         if !ptr.is_null() {
             let _ = Box::from_raw(ptr);
@@ -822,8 +822,8 @@ pub unsafe extern "C" fn cpp_loess_free(ptr: *mut CppLoess) {
     });
 }
 
-// Result of `cpp_predict()`. All arrays are allocated by Rust and must be freed via
-// `cpp_predict_free_result`.
+// Result of `fastloess_predict()`. All arrays are allocated by Rust and must be freed via
+// `fastloess_predict_free_result`.
 #[repr(C)]
 pub struct CppPredictResult {
     /// Predicted y values, one per query point (length = n)
@@ -883,7 +883,7 @@ fn predict_error_result(msg: &str) -> CppPredictResult {
 /// valid null-terminated string or null (defaults to "clamp").
 #[unsafe(no_mangle)]
 #[allow(clippy::too_many_arguments)]
-pub unsafe extern "C" fn cpp_predict(
+pub unsafe extern "C" fn fastloess_predict(
     handle: *mut CppPredictHandle,
     new_x: *const c_double,
     new_x_len: usize,
@@ -949,7 +949,7 @@ pub unsafe extern "C" fn cpp_predict(
 /// # Safety
 /// `result` must be a valid pointer to a CppPredictResult struct.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_predict_free_result(result: *mut CppPredictResult) {
+pub unsafe extern "C" fn fastloess_predict_free_result(result: *mut CppPredictResult) {
     with_panic_void(|| {
         if result.is_null() {
             return;
@@ -973,7 +973,7 @@ pub unsafe extern "C" fn cpp_predict_free_result(result: *mut CppPredictResult) 
 /// # Safety
 /// `ptr` must be a valid pointer returned via `CppLoessResult::predict_handle`, or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_predict_handle_free(ptr: *mut CppPredictHandle) {
+pub unsafe extern "C" fn fastloess_predict_handle_free(ptr: *mut CppPredictHandle) {
     with_panic_void(|| {
         if !ptr.is_null() {
             let _ = Box::from_raw(ptr);
@@ -986,7 +986,7 @@ pub unsafe extern "C" fn cpp_predict_handle_free(ptr: *mut CppPredictHandle) {
 /// # Safety
 /// Pointers must be valid null-terminated strings or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_new(
+pub unsafe extern "C" fn fastloess_streaming_new(
     fraction: c_double,
     iterations: c_int,
     weight_function: *const c_char,
@@ -1138,7 +1138,7 @@ pub unsafe extern "C" fn cpp_streaming_new(
 /// `ptr` must be valid. `x_values` must be a valid array of length `x_n` (= n_observations * dimensions),
 /// `y_values` must be a valid array of length `y_n` (= n_observations).
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_process(
+pub unsafe extern "C" fn fastloess_streaming_process(
     ptr: *mut CppStreamingLoess,
     x_values: *const c_double,
     x_n: usize,
@@ -1171,13 +1171,13 @@ pub unsafe extern "C" fn cpp_streaming_process(
 ///
 /// # Safety
 /// `ptr` must be null or point to a live `CppStreamingLoess` created by
-/// `cpp_streaming_new`, with exclusive access for the duration of this call.
+/// `fastloess_streaming_new`, with exclusive access for the duration of this call.
 /// Non-null `x_values`, `y_values`, and `weights` must point to aligned,
 /// initialized arrays readable for `x_n`, `y_n`, and `weights_n` elements,
 /// respectively. The arrays must remain valid and unmodified during this call
 /// and must not overlap the model being mutated.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_process_weighted(
+pub unsafe extern "C" fn fastloess_streaming_process_weighted(
     ptr: *mut CppStreamingLoess,
     x_values: *const c_double,
     x_n: usize,
@@ -1212,7 +1212,9 @@ pub unsafe extern "C" fn cpp_streaming_process_weighted(
 /// # Safety
 /// `ptr` must be valid.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLoess) -> CppLoessResult {
+pub unsafe extern "C" fn fastloess_streaming_finalize(
+    ptr: *mut CppStreamingLoess,
+) -> CppLoessResult {
     with_panic_result(|| {
         if ptr.is_null() {
             return error_result(shared_parse::MODEL_POINTER_IS_NULL);
@@ -1234,7 +1236,7 @@ pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLoess) -> 
 /// # Safety
 /// `ptr` must be valid or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_free(ptr: *mut CppStreamingLoess) {
+pub unsafe extern "C" fn fastloess_streaming_free(ptr: *mut CppStreamingLoess) {
     with_panic_void(|| {
         if !ptr.is_null() {
             let _ = Box::from_raw(ptr);
@@ -1247,7 +1249,7 @@ pub unsafe extern "C" fn cpp_streaming_free(ptr: *mut CppStreamingLoess) {
 /// # Safety
 /// Pointers must be valid null-terminated strings or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_new(
+pub unsafe extern "C" fn fastloess_online_new(
     fraction: c_double,
     iterations: c_int,
     weight_function: *const c_char,
@@ -1464,7 +1466,7 @@ unsafe fn online_add_point_impl(
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_add_point(
+pub unsafe extern "C" fn fastloess_online_add_point(
     ptr: *mut CppOnlineLoess,
     x: c_double,
     y: c_double,
@@ -1483,7 +1485,7 @@ pub unsafe extern "C" fn cpp_online_add_point(
 /// # Safety
 /// `ptr` must be valid. If `x_n` is nonzero, `x_values` must point to `x_n` valid values.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_add_point_nd(
+pub unsafe extern "C" fn fastloess_online_add_point_nd(
     ptr: *mut CppOnlineLoess,
     x_values: *const c_double,
     x_n: usize,
@@ -1505,9 +1507,9 @@ pub unsafe extern "C" fn cpp_online_add_point_nd(
 ///
 /// # Safety
 /// `ptr` must be null or point to a live `CppOnlineLoess` created by
-/// `cpp_online_new`, with exclusive access for the duration of this call.
+/// `fastloess_online_new`, with exclusive access for the duration of this call.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_add_point_weighted(
+pub unsafe extern "C" fn fastloess_online_add_point_weighted(
     ptr: *mut CppOnlineLoess,
     x: c_double,
     y: c_double,
@@ -1525,12 +1527,12 @@ pub unsafe extern "C" fn cpp_online_add_point_weighted(
 ///
 /// # Safety
 /// `ptr` must be null or point to a live `CppOnlineLoess` created by
-/// `cpp_online_new`, with exclusive access for the duration of this call.
+/// `fastloess_online_new`, with exclusive access for the duration of this call.
 /// Non-null `x_values` must point to an aligned, initialized array readable
 /// for `x_n` elements. The array must remain valid and unmodified during this
 /// call and must not overlap the model being mutated.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_add_point_nd_weighted(
+pub unsafe extern "C" fn fastloess_online_add_point_nd_weighted(
     ptr: *mut CppOnlineLoess,
     x_values: *const c_double,
     x_n: usize,
@@ -1553,9 +1555,9 @@ pub unsafe extern "C" fn cpp_online_add_point_nd_weighted(
 ///
 /// # Safety
 /// `ptr` must be null or point to a live `CppOnlineLoess` created by
-/// `cpp_online_new`. The model must not be mutated or freed during this call.
+/// `fastloess_online_new`. The model must not be mutated or freed during this call.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_window_diagnostics(
+pub unsafe extern "C" fn fastloess_online_window_diagnostics(
     ptr: *mut CppOnlineLoess,
 ) -> CppOnlineDiagnostics {
     match catch_unwind(AssertUnwindSafe(|| {
@@ -1609,12 +1611,12 @@ pub unsafe extern "C" fn cpp_online_window_diagnostics(
 ///
 /// # Safety
 /// `result` must be null or point to a valid, writable `CppOnlineDiagnostics`
-/// returned by `cpp_online_window_diagnostics`, with exclusive access during
+/// returned by `fastloess_online_window_diagnostics`, with exclusive access during
 /// this call. Its non-null error pointer must be unchanged and not previously
 /// freed through another copy of the result. The result structure itself is
 /// not freed by this function.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_free_diagnostics(result: *mut CppOnlineDiagnostics) {
+pub unsafe extern "C" fn fastloess_online_free_diagnostics(result: *mut CppOnlineDiagnostics) {
     with_panic_void(|| {
         if !result.is_null() {
             let result = unsafe { &mut *result };
@@ -1628,14 +1630,14 @@ pub unsafe extern "C" fn cpp_online_free_diagnostics(result: *mut CppOnlineDiagn
 ///
 /// # Safety
 /// `ptr` must be null or point to a live `CppOnlineLoess` created by
-/// `cpp_online_new`. The model must not be mutated or freed during this call.
+/// `fastloess_online_new`. The model must not be mutated or freed during this call.
 /// Non-null `new_x` must point to an aligned, initialized array readable for
 /// `new_x_len` elements. `extrapolation` must be null or point to a valid
 /// null-terminated C string. Both inputs must remain valid and unmodified for
 /// the duration of this call.
 #[unsafe(no_mangle)]
 #[allow(clippy::too_many_arguments)]
-pub unsafe extern "C" fn cpp_online_predict_window(
+pub unsafe extern "C" fn fastloess_online_predict_window(
     ptr: *mut CppOnlineLoess,
     new_x: *const c_double,
     new_x_len: usize,
@@ -1714,7 +1716,7 @@ pub unsafe extern "C" fn cpp_online_predict_window(
 /// # Safety
 /// `output` must be a valid pointer and `output->error` must have been allocated by Rust.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_free_output(output: *mut CppOnlineOutput) {
+pub unsafe extern "C" fn fastloess_online_free_output(output: *mut CppOnlineOutput) {
     with_panic_void(|| {
         if !output.is_null() {
             let out = unsafe { &mut *output };
@@ -1732,7 +1734,7 @@ pub unsafe extern "C" fn cpp_online_free_output(output: *mut CppOnlineOutput) {
 /// # Safety
 /// `ptr` must be valid or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_free(ptr: *mut CppOnlineLoess) {
+pub unsafe extern "C" fn fastloess_online_free(ptr: *mut CppOnlineLoess) {
     with_panic_void(|| {
         if !ptr.is_null() {
             let _ = Box::from_raw(ptr);
@@ -1745,7 +1747,7 @@ pub unsafe extern "C" fn cpp_online_free(ptr: *mut CppOnlineLoess) {
 /// # Safety
 /// `result` must be a valid pointer to a CppLoessResult struct.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_loess_free_result(result: *mut CppLoessResult) {
+pub unsafe extern "C" fn fastloess_loess_free_result(result: *mut CppLoessResult) {
     with_panic_void(|| {
         if result.is_null() {
             return;
@@ -1792,7 +1794,7 @@ mod tests {
             cv_seed: None,
         };
         let seed = (1u64 << 40) + 42;
-        unsafe { cpp_loess_set_cv_seed(&mut model, seed) };
+        unsafe { fastloess_loess_set_cv_seed(&mut model, seed) };
         assert_eq!(model.cv_seed, Some(seed));
         assert_eq!(
             std::mem::size_of::<usize>(),
@@ -1814,25 +1816,25 @@ mod tests {
         let retained = Arc::downgrade(native.predict_state.as_ref().unwrap());
         let mut result = CppLoessResult::from(native);
         assert!(retained.upgrade().is_some());
-        unsafe { cpp_loess_free_result(&mut result) };
+        unsafe { fastloess_loess_free_result(&mut result) };
         assert!(retained.upgrade().is_none());
         assert!(result.x.is_null());
         assert!(result.predict_handle.is_null());
-        unsafe { cpp_loess_free_result(&mut result) };
+        unsafe { fastloess_loess_free_result(&mut result) };
     }
 
     #[test]
     fn result_free_cleans_zero_length_errors() {
         let mut result = error_result("test error");
-        unsafe { cpp_loess_free_result(&mut result) };
+        unsafe { fastloess_loess_free_result(&mut result) };
         assert!(result.error.is_null());
-        unsafe { cpp_loess_free_result(&mut result) };
+        unsafe { fastloess_loess_free_result(&mut result) };
         let mut prediction = CppPredictResult {
             error: shared_parse::into_raw_error_c_string("test prediction error"),
             ..Default::default()
         };
-        unsafe { cpp_predict_free_result(&mut prediction) };
+        unsafe { fastloess_predict_free_result(&mut prediction) };
         assert!(prediction.error.is_null());
-        unsafe { cpp_predict_free_result(&mut prediction) };
+        unsafe { fastloess_predict_free_result(&mut prediction) };
     }
 }

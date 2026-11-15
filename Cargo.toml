@@ -28,3 +28,8 @@ codegen-units = 1
 [profile.release-c]
 inherits = "release"
 panic = "abort"
+
+# Matching Debug CRT profile for Windows MSVC vcpkg consumers (/MDd).
+[profile.debug-c]
+inherits = "dev"
+panic = "abort"

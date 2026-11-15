@@ -178,12 +178,12 @@ dev:
 	@echo "=============================================================================="
 	@echo "2c. Symbol export verification..."
 	@echo "=============================================================================="
-	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q cpp_loess_new || \
-		(echo "Error: cpp_loess_new not exported"; exit 1)
-	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q cpp_streaming_new || \
-		(echo "Error: cpp_streaming_new not exported"; exit 1)
-	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q cpp_online_new || \
-		(echo "Error: cpp_online_new not exported"; exit 1)
+	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q fastloess_loess_new || \
+		(echo "Error: fastloess_loess_new not exported"; exit 1)
+	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q fastloess_streaming_new || \
+		(echo "Error: fastloess_streaming_new not exported"; exit 1)
+	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q fastloess_online_new || \
+		(echo "Error: fastloess_online_new not exported"; exit 1)
 	@echo "All C++ exports verified."
 	@echo "=============================================================================="
 	@echo "3. Testing..."
