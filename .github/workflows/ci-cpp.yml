@@ -242,7 +242,9 @@ jobs:
         with:
           components: rustfmt, clippy
       - name: Install clang and cppcheck
-        run: sudo apt-get install -y --no-install-recommends clang cppcheck valgrind
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang cppcheck valgrind
       - uses: Swatinem/rust-cache@v2
         with:
           key: cpp-clang-linux
@@ -303,7 +305,9 @@ jobs:
         with:
           key: cpp-intel-oneapi
       - name: Install cppcheck
-        run: sudo apt-get install -y cppcheck valgrind
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cppcheck valgrind
       - name: Install Intel oneAPI C++ compiler
         run: |
           wget -qO- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
@@ -333,7 +337,9 @@ jobs:
         with:
           key: cpp-asan
       - name: Install System Dependencies
-        run: sudo apt-get install -y --no-install-recommends clang lld cmake g++
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang lld cmake g++
       - name: Build (ASAN)
         env:
           RUSTFLAGS: -Zsanitizer=address
