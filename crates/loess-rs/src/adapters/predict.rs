@@ -660,12 +660,11 @@ fn linear_prediction_standard_errors<
         let mut total = T::zero();
         let mut first = T::zero();
         let mut second = T::zero();
-        for neighbor in 0..neighborhood.len() {
-            let index = neighborhood.indices[neighbor];
+        for (&index, &distance) in neighborhood.indices.iter().zip(&neighborhood.distances) {
             let offset = (state.x[index] - query) / bandwidth;
             let weight = state
                 .weight_function
-                .compute_weight(neighborhood.distances[neighbor] / bandwidth);
+                .compute_weight(distance / bandwidth);
             values[index] = weight;
             total = total + weight;
             first = first + weight * offset;
@@ -673,8 +672,7 @@ fn linear_prediction_standard_errors<
         }
         let determinant = total * second - first * first;
         if determinant > T::zero() {
-            for neighbor in 0..neighborhood.len() {
-                let index = neighborhood.indices[neighbor];
+            for &index in &neighborhood.indices {
                 let offset = (state.x[index] - query) / bandwidth;
                 let weight = values[index];
                 values[index] = weight * (second - first * offset) / determinant;
@@ -719,8 +717,8 @@ fn linear_prediction_standard_errors<
             }
         }
     } else {
-        for training in 0..count {
-            let (values, _) = influence(state.x[training], &mut search, &mut neighborhood);
+        for (training, &x_training) in state.x.iter().enumerate().take(count) {
+            let (values, _) = influence(x_training, &mut search, &mut neighborhood);
             for (observation, coefficient) in values.iter().enumerate() {
                 let identity = if observation == training {
                     T::one()
