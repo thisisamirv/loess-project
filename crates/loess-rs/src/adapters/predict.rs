@@ -662,9 +662,7 @@ fn linear_prediction_standard_errors<
         let mut second = T::zero();
         for (&index, &distance) in neighborhood.indices.iter().zip(&neighborhood.distances) {
             let offset = (state.x[index] - query) / bandwidth;
-            let weight = state
-                .weight_function
-                .compute_weight(distance / bandwidth);
+            let weight = state.weight_function.compute_weight(distance / bandwidth);
             values[index] = weight;
             total = total + weight;
             first = first + weight * offset;
