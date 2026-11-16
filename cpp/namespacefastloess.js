@@ -24,6 +24,12 @@ var namespacefastloess =
     [ "PredictResult", "classfastloess_1_1PredictResult.html", "classfastloess_1_1PredictResult" ],
     [ "StreamingLoess", "classfastloess_1_1StreamingLoess.html", "classfastloess_1_1StreamingLoess" ],
     [ "StreamingOptions", "structfastloess_1_1StreamingOptions.html", "structfastloess_1_1StreamingOptions" ],
+    [ "OnlinePointStatus", "namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6", [
+      [ "Filling", "namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6add9f2a11a5ac6eea9163f4c453b61d02", null ],
+      [ "Ready", "namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6ae7d31fc0602fb2ede144d18cdffd816b", null ],
+      [ "Dropped", "namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6a74339e8d9916761b9b69183a081076c6", null ]
+    ] ],
     [ "hasOutput", "namespacefastloess.html#a3a5aa6cb156511f5afdd9437f14a1220", null ],
+    [ "onlinePointStatusFromRaw", "namespacefastloess.html#a770288c056d9cb86790356602f8b20c1", null ],
     [ "validateOutputs", "namespacefastloess.html#ae9cd04f894409b8f7bd69cd6086d4271", null ]
 ];

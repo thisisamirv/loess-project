@@ -103,6 +103,19 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>This changelog includes end-user changes only. For internal development notes, see the <a href="https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md">repository changelog</a>.</p>
+<h2>3.1.0</h2>
+<h3>Changed</h3>
+<ul>
+<li><code>OnlineOutput</code> now distinguishes a still-filling window from a point dropped under <code>missing = "drop"</code> via <code>OnlinePointStatus</code> (<code>status()</code> / <code>dropped()</code>). <code>has_value()</code> remains true only when a smoothed estimate is ready.</li>
+<li>Breaking change: renamed the public C ABI from the generic <code>cpp_*</code> prefix to <code>fastloess_*</code> (for example <code>fastloess_loess_new</code>, <code>fastloess_version</code>) so symbols do not collide with other bindings.</li>
+<li>Windows MSVC releases now publish separate Debug and Release shared libraries for vcpkg consumers (both use <code>/MD</code> because the Rust MSVC standard library does).</li>
+<li>Dropped the unused <code>libc</code> Rust dependency from the C++ binding crate.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Extend/Zero boundary pads use unit spacing when leading/trailing predictor ties would otherwise stack pads.</li>
+<li>Fixed retained-model <code>predict_handle</code> ownership documentation and take API (<code>fastloess_loess_take_predict_handle</code>) so C consumers can transfer handles before <code>free_result</code>.</li>
+</ul>
 <h2>3.0.0</h2>
 <h3>Added</h3>
 <ul>

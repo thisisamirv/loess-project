@@ -126,6 +126,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af95055e8eac0da6246362e1f758a719e" id="r_af95055e8eac0da6246362e1f758a719e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1OnlineLoess.html">OnlineLoess</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineLoess.html#af95055e8eac0da6246362e1f758a719e">operator=</a> (<a class="el" href="classfastloess_1_1OnlineLoess.html">OnlineLoess</a> &amp;&amp;<a class="el" href="classfastloess_1_1Expected.html">other</a>) <a class="el" href="classfastloess_1_1Expected.html">noexcept</a></td></tr>
 <tr class="separator:af95055e8eac0da6246362e1f758a719e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f67617858b5e747e6c74870cd3b6e80" id="r_a0f67617858b5e747e6c74870cd3b6e80"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">Expected</a>&lt; <a class="el" href="classfastloess_1_1OnlineOutput.html">OnlineOutput</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineLoess.html#a0f67617858b5e747e6c74870cd3b6e80">add_point</a> (<a class="el" href="classfastloess_1_1Expected.html">double</a> <a class="el" href="classfastloess_1_1Expected.html">x</a>, <a class="el" href="classfastloess_1_1Expected.html">double</a> y)</td></tr>
+<tr class="memdesc:a0f67617858b5e747e6c74870cd3b6e80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a point.  <br /></td></tr>
 <tr class="separator:a0f67617858b5e747e6c74870cd3b6e80"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6eaed42bcb07779ceec0ed3bfb8bf040" id="r_a6eaed42bcb07779ceec0ed3bfb8bf040"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">Expected</a>&lt; <a class="el" href="classfastloess_1_1OnlineOutput.html">OnlineOutput</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineLoess.html#a6eaed42bcb07779ceec0ed3bfb8bf040">add_point</a> (<a class="el" href="classfastloess_1_1Expected.html">double</a> <a class="el" href="classfastloess_1_1Expected.html">x</a>, <a class="el" href="classfastloess_1_1Expected.html">double</a> y, <a class="el" href="classfastloess_1_1Expected.html">double</a> <a class="el" href="classfastloess_1_1Expected.html">weight</a>)</td></tr>
 <tr class="separator:a6eaed42bcb07779ceec0ed3bfb8bf040"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -359,6 +360,9 @@ Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Add a point. </p>
+<p>Use <code><a class="el" href="classfastloess_1_1OnlineOutput.html#a4a63408745a62b2d92623d854cc8351e" title="True when the window has enough points to produce a smoothed estimate.">OnlineOutput::has_value()</a></code> / <code>status()</code> / <code>dropped()</code> to distinguish ready, filling, and dropped-under-missing outcomes. </p>
 
 </div>
 </div>

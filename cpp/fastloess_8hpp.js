@@ -17,7 +17,13 @@ var fastloess_8hpp =
     [ "fastloess::StreamingLoess", "classfastloess_1_1StreamingLoess.html", "classfastloess_1_1StreamingLoess" ],
     [ "fastloess::OnlineOutput", "classfastloess_1_1OnlineOutput.html", "classfastloess_1_1OnlineOutput" ],
     [ "fastloess::OnlineLoess", "classfastloess_1_1OnlineLoess.html", "classfastloess_1_1OnlineLoess" ],
+    [ "OnlinePointStatus", "fastloess_8hpp.html#a10ca5b40c082593212a4956b88710bc6", [
+      [ "Filling", "fastloess_8hpp.html#a10ca5b40c082593212a4956b88710bc6add9f2a11a5ac6eea9163f4c453b61d02", null ],
+      [ "Ready", "fastloess_8hpp.html#a10ca5b40c082593212a4956b88710bc6ae7d31fc0602fb2ede144d18cdffd816b", null ],
+      [ "Dropped", "fastloess_8hpp.html#a10ca5b40c082593212a4956b88710bc6a74339e8d9916761b9b69183a081076c6", null ]
+    ] ],
     [ "hasOutput", "fastloess_8hpp.html#a3a5aa6cb156511f5afdd9437f14a1220", null ],
+    [ "onlinePointStatusFromRaw", "fastloess_8hpp.html#a770288c056d9cb86790356602f8b20c1", null ],
     [ "validateOutputs", "fastloess_8hpp.html#ae9cd04f894409b8f7bd69cd6086d4271", null ],
     [ "k_default_chunk_size", "fastloess_8hpp.html#a6916fb8ce782a3bf44496a44cc706da6", null ],
     [ "k_default_cv_k", "fastloess_8hpp.html#a42b17d52ff37e457d7fcfe8fdac29acf", null ],

@@ -197,16 +197,7 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 </div><!-- fragment --><p>The recipe links its homepage to the C++ documentation and provides checks for the installed headers and library directory. Recipes with the standalone smoke test can compile and run a small linear fit against the installed library:</p>
 <div class="fragment"><div class="line">spack test run --alias fastloess-cpp-smoke fastloess-cpp</div>
 <div class="line">spack test results -l fastloess-cpp-smoke</div>
-</div><!-- fragment --><h2>From vcpkg (Repository Overlay)</h2>
-<p>The repository provides a <code>fastloess</code> overlay port for the published v2.0.0 CPU shared library. It is not yet part of vcpkg's curated registry. Rust and Cargo are not required for installation.</p>
-<p>From the repository root, with <code>VCPKG_ROOT</code> pointing to an existing vcpkg checkout:</p>
-<div class="fragment"><div class="line">&amp; &quot;$env:VCPKG_ROOT/vcpkg.exe&quot; install fastloess:x64-windows --overlay-ports=bindings/cpp/vcpkg</div>
-</div><!-- fragment --><p>Windows x64/ARM64 MSVC, glibc Linux x64/ARM64, and macOS x64/ARM64 dynamic targets are supported. Use dynamic triplets such as <code>x64-linux-dynamic</code> or <code>arm64-osx-dynamic</code> on Unix; default static triplets and musl are unsupported by this port. Debug and Release consumers use the same prebuilt Release library; Windows requires the dynamic CRT.</p>
-<p>Configure your application with vcpkg's CMake toolchain and the same triplet, then link the installed target:</p>
-<div class="fragment"><div class="line">find_package(fastloess CONFIG REQUIRED)</div>
-<div class="line">target_link_libraries(myapp PRIVATE fastloess::fastloess)</div>
-</div><!-- fragment --><p>The overlay README under <code>bindings/cpp/vcpkg</code> contains installation, consumer validation, and clangd configuration commands. The v2.0.0 port discloses its dependency-license provenance limitation; future releases must install the matching generated notices before that limitation can be resolved.</p>
-<hr  />
+</div><!-- fragment --><hr  />
 <h2>Verify Installation</h2>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastloess_8hpp.html">fastloess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -223,8 +214,8 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="line"><span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 <div class="ttc" id="aclassfastloess_1_1Expected_html_a8d42c6a77cf5c282230aee46b48da418"><div class="ttname"><a href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">fastloess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastloess.hpp:106</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:705</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:784</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:703</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:782</div></div>
 <div class="ttc" id="afastloess_8hpp_html"><div class="ttname"><a href="fastloess_8hpp.html">fastloess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLoess library.</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">Installed successfully!</div>
 </div><!-- fragment --><h2>Check the Header and Library Versions</h2>
@@ -238,17 +229,17 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="ttc" id="afastloess__version_8h_html"><div class="ttname"><a href="fastloess__version_8h.html">fastloess_version.h</a></div></div>
 <div class="ttc" id="afastloess__version_8h_html_a6b46be6ae0ea22611c08e8b16e0e8d9d"><div class="ttname"><a href="fastloess__version_8h.html#a6b46be6ae0ea22611c08e8b16e0e8d9d">FASTLOESS_CPP_VERSION_MAJOR</a></div><div class="ttdeci">#define FASTLOESS_CPP_VERSION_MAJOR</div><div class="ttdef"><b>Definition</b> fastloess_version.h:4</div></div>
 </div><!-- fragment --><p>The macros <code>FASTLOESS_CPP_VERSION_MAJOR</code>, <code>FASTLOESS_CPP_VERSION_MINOR</code>, <code>FASTLOESS_CPP_VERSION_PATCH</code>, and <code>FASTLOESS_CPP_VERSION_STRING</code> describe the headers used to compile your application. <code><a class="el" href="fastloess_8hpp.html" title="C++ wrapper for fastLoess library.">fastloess.hpp</a></code> includes this header automatically.</p>
-<p>Use <code>cpp_version()</code> to identify the native library loaded at runtime:</p>
+<p>Use <code>fastloess_version()</code> to identify the native library loaded at runtime:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastloess_8hpp.html">fastloess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main() {</div>
 <div class="line"> std::cout &lt;&lt; <span class="stringliteral">&quot;Header version: &quot;</span> &lt;&lt; <a class="code hl_define" href="fastloess__version_8h.html#aad7be8e4731874cd4289af76a45d0eda">FASTLOESS_CPP_VERSION_STRING</a> &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"> std::cout &lt;&lt; <span class="stringliteral">&quot;Loaded library version: &quot;</span> &lt;&lt; cpp_version() &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
+<div class="line"> std::cout &lt;&lt; <span class="stringliteral">&quot;Loaded library version: &quot;</span> &lt;&lt; fastloess_version() &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
 <div class="line">}</div>
 <div class="ttc" id="afastloess__version_8h_html_aad7be8e4731874cd4289af76a45d0eda"><div class="ttname"><a href="fastloess__version_8h.html#aad7be8e4731874cd4289af76a45d0eda">FASTLOESS_CPP_VERSION_STRING</a></div><div class="ttdeci">#define FASTLOESS_CPP_VERSION_STRING</div><div class="ttdef"><b>Definition</b> fastloess_version.h:7</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">Header version: 3.0.0</div>
-<div class="line">Loaded library version: 3.0.0</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Header version: 3.1.0</div>
+<div class="line">Loaded library version: 3.1.0</div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Execution Modes :: fastloess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/guide/adapter-choice.html">
-    <meta name="generator" content="Antora 3.2.1">
+    <meta name="generator" content="Antora 3.2.3">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -555,9 +555,9 @@ try (StreamingLoess model = new StreamingLoess(options)) {
 try (OnlineLoess model = new OnlineLoess(options)) {
     int shown = 0;
     for (int i = 0; i &lt; x.length &amp;&amp; shown &lt; 5; i++) {
-        Optional&lt;PointResult&gt; result = model.addPoint(x[i], y[i]);
-        if (result.isPresent()) {
-            System.out.println(result.get().y());
+        AddPointResult result = model.addPoint(x[i], y[i]);
+        if (result.isReady()) {
+            System.out.println(result.point().orElseThrow().y());
             shown++;
         }
     }

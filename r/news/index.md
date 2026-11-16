@@ -1,5 +1,26 @@
 # Changelog
 
+## rfastloess 3.1.0
+
+### Changed
+
+- Breaking change:
+  [`add_point()`](https://thisisamirv.github.io/loess-project/r/reference/add_point.md)
+  returns a list with `status` of `"filling"` / `"ready"` / `"dropped"`
+  and `point` instead of an online-output list or `NULL`.
+
+### Fixed
+
+- Distinguishing Online `add_point` filling vs `missing="drop"` via
+  ternary `status`.
+- Extend/Zero boundary pads use unit spacing when leading/trailing
+  predictor ties would otherwise stack pads.
+- Adding idempotent [`close()`](https://rdrr.io/r/base/connections.html)
+  on `Loess`, `StreamingLoess`, and `OnlineLoess` (clears retained
+  predict state / releases native adapters).
+- Mapping fit/stream/online/`predict` failures via `map_loess_result` so
+  InvalidArg vs Runtime categories are preserved.
+
 ## rfastloess 3.0.0
 
 ### Added

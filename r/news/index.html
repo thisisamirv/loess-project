@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,6 +34,20 @@
       <small>Source: <a href="https://github.com/thisisamirv/loess-project/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.1.0" id="rfastloess-310">rfastloess 3.1.0<a class="anchor" aria-label="anchor" href="#rfastloess-310"></a></h2>
+<div class="section level3">
+<h3 id="changed-3-1-0">Changed<a class="anchor" aria-label="anchor" href="#changed-3-1-0"></a></h3>
+<ul><li>Breaking change: <code><a href="../reference/add_point.html">add_point()</a></code> returns a list with <code>status</code> of <code>"filling"</code> / <code>"ready"</code> / <code>"dropped"</code> and <code>point</code> instead of an online-output list or <code>NULL</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-3-1-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-3-1-0"></a></h3>
+<ul><li>Distinguishing Online <code>add_point</code> filling vs <code>missing="drop"</code> via ternary <code>status</code>.</li>
+<li>Extend/Zero boundary pads use unit spacing when leading/trailing predictor ties would otherwise stack pads.</li>
+<li>Adding idempotent <code><a href="https://rdrr.io/r/base/connections.html" class="external-link">close()</a></code> on <code>Loess</code>, <code>StreamingLoess</code>, and <code>OnlineLoess</code> (clears retained predict state / releases native adapters).</li>
+<li>Mapping fit/stream/online/<code>predict</code> failures via <code>map_loess_result</code> so InvalidArg vs Runtime categories are preserved.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="3.0.0" id="rfastloess-300">rfastloess 3.0.0<a class="anchor" aria-label="anchor" href="#rfastloess-300"></a></h2>
 <div class="section level3">

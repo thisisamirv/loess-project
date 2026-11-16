@@ -117,6 +117,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a4a63408745a62b2d92623d854cc8351e" id="r_a4a63408745a62b2d92623d854cc8351e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineOutput.html#a4a63408745a62b2d92623d854cc8351e">has_value</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
 <tr class="memdesc:a4a63408745a62b2d92623d854cc8351e"><td class="mdescLeft">&#160;</td><td class="mdescRight">True when the window has enough points to produce a smoothed estimate.  <br /></td></tr>
 <tr class="separator:a4a63408745a62b2d92623d854cc8351e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a107d3a26e3cdf95eb47e8e3468114e11" id="r_a107d3a26e3cdf95eb47e8e3468114e11"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineOutput.html#a107d3a26e3cdf95eb47e8e3468114e11">dropped</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:a107d3a26e3cdf95eb47e8e3468114e11"><td class="mdescLeft">&#160;</td><td class="mdescRight">True when <code>missing = "drop"</code> ignored a non-finite point.  <br /></td></tr>
+<tr class="separator:a107d3a26e3cdf95eb47e8e3468114e11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a132c5b2dd10965dd0361407d63755e52" id="r_a132c5b2dd10965dd0361407d63755e52"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6">OnlinePointStatus</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineOutput.html#a132c5b2dd10965dd0361407d63755e52">status</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:a132c5b2dd10965dd0361407d63755e52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detailed outcome of the latest <code>add_point</code> call.  <br /></td></tr>
+<tr class="separator:a132c5b2dd10965dd0361407d63755e52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36e9c3a9db54c93bd62859c746cfbefa" id="r_a36e9c3a9db54c93bd62859c746cfbefa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineOutput.html#a36e9c3a9db54c93bd62859c746cfbefa">y</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
 <tr class="memdesc:a36e9c3a9db54c93bd62859c746cfbefa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Smoothed value for the latest point (valid only when <a class="el" href="classfastloess_1_1OnlineOutput.html#a4a63408745a62b2d92623d854cc8351e" title="True when the window has enough points to produce a smoothed estimate.">has_value()</a> == true).  <br /></td></tr>
 <tr class="separator:a36e9c3a9db54c93bd62859c746cfbefa"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -158,7 +164,7 @@ Friends</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Result of a single online update step. </p>
-<p>Call <a class="el" href="classfastloess_1_1OnlineOutput.html#a4a63408745a62b2d92623d854cc8351e" title="True when the window has enough points to produce a smoothed estimate.">has_value()</a> to check if the window is ready. When false, the window is still filling and no smoothed estimate is available yet. All optional fields are NaN when not computed. </p>
+<p>Call <code><a class="el" href="classfastloess_1_1OnlineOutput.html#a132c5b2dd10965dd0361407d63755e52" title="Detailed outcome of the latest add_point call.">status()</a></code> / <code><a class="el" href="classfastloess_1_1OnlineOutput.html#a4a63408745a62b2d92623d854cc8351e" title="True when the window has enough points to produce a smoothed estimate.">has_value()</a></code> / <code><a class="el" href="classfastloess_1_1OnlineOutput.html#a107d3a26e3cdf95eb47e8e3468114e11" title="True when missing = &quot;drop&quot; ignored a non-finite point.">dropped()</a></code> to distinguish a ready estimate, a still-filling window, and a point dropped under <code>missing = "drop"</code>. All optional fields are NaN when not computed. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="ad3002e2c972ba34ebe8c7d303c76aca5" name="ad3002e2c972ba34ebe8c7d303c76aca5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad3002e2c972ba34ebe8c7d303c76aca5">&#9670;&#160;</a></span>confidence_lower()</h2>
@@ -211,6 +217,33 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Confidence interval upper bound (<code>update_mode == "full"</code> only, NaN if not computed). </p>
+
+</div>
+</div>
+<a id="a107d3a26e3cdf95eb47e8e3468114e11" name="a107d3a26e3cdf95eb47e8e3468114e11"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a107d3a26e3cdf95eb47e8e3468114e11">&#9670;&#160;</a></span>dropped()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">bool</a> fastloess::OnlineOutput::dropped </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>True when <code>missing = "drop"</code> ignored a non-finite point. </p>
 
 </div>
 </div>
@@ -427,6 +460,33 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Standard error (NaN if not computed). </p>
+
+</div>
+</div>
+<a id="a132c5b2dd10965dd0361407d63755e52" name="a132c5b2dd10965dd0361407d63755e52"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a132c5b2dd10965dd0361407d63755e52">&#9670;&#160;</a></span>status()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6">OnlinePointStatus</a> fastloess::OnlineOutput::status </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Detailed outcome of the latest <code>add_point</code> call. </p>
 
 </div>
 </div>

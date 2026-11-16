@@ -102,6 +102,7 @@ $(document).ready(function(){initNavTree('fastloess_8hpp.html',''); initResizabl
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">fastloess.hpp File Reference</div></div>
@@ -185,12 +186,23 @@ Namespaces</h2></td></tr>
 <tr class="memitem:namespacefastloess_1_1detail" id="r_namespacefastloess_1_1detail"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastloess_1_1detail.html">fastloess::detail</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:a10ca5b40c082593212a4956b88710bc6" id="r_a10ca5b40c082593212a4956b88710bc6"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6">fastloess::OnlinePointStatus</a> : std::int8_t { <a class="el" href="namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6add9f2a11a5ac6eea9163f4c453b61d02">fastloess::Filling</a> = 0
+, <a class="el" href="namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6ae7d31fc0602fb2ede144d18cdffd816b">fastloess::Ready</a> = 1
+, <a class="el" href="namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6a74339e8d9916761b9b69183a081076c6">fastloess::Dropped</a> = -1
+ }</td></tr>
+<tr class="memdesc:a10ca5b40c082593212a4956b88710bc6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Outcome of <code>OnlineLoess::add_point</code>.  <a href="namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6">More...</a><br /></td></tr>
+<tr class="separator:a10ca5b40c082593212a4956b88710bc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a3a5aa6cb156511f5afdd9437f14a1220" id="r_a3a5aa6cb156511f5afdd9437f14a1220"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastloess.html#a3a5aa6cb156511f5afdd9437f14a1220">fastloess::hasOutput</a> (<a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; std::string &gt; &amp;outputs, <a class="el" href="classfastloess_1_1Expected.html">const</a> <a class="el" href="classfastloess_1_1Expected.html">char</a> *<a class="el" href="classfastloess_1_1Expected.html">name</a>)</td></tr>
 <tr class="separator:a3a5aa6cb156511f5afdd9437f14a1220"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9cd04f894409b8f7bd69cd6086d4271" id="r_ae9cd04f894409b8f7bd69cd6086d4271"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastloess.html#ae9cd04f894409b8f7bd69cd6086d4271">fastloess::validateOutputs</a> (<a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; std::string &gt; &amp;outputs, std::initializer_list&lt; <a class="el" href="classfastloess_1_1Expected.html">const</a> <a class="el" href="classfastloess_1_1Expected.html">char</a> * &gt; <a class="el" href="classfastloess_1_1Expected.html">allowed</a>)</td></tr>
 <tr class="separator:ae9cd04f894409b8f7bd69cd6086d4271"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a770288c056d9cb86790356602f8b20c1" id="r_a770288c056d9cb86790356602f8b20c1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacefastloess.html#a10ca5b40c082593212a4956b88710bc6">OnlinePointStatus</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastloess.html#a770288c056d9cb86790356602f8b20c1">fastloess::onlinePointStatusFromRaw</a> (<a class="el" href="classfastloess_1_1Expected.html">int</a> has_value)</td></tr>
+<tr class="separator:a770288c056d9cb86790356602f8b20c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Changelog :: fastloess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/NEWS.html">
-    <meta name="generator" content="Antora 3.2.1">
+    <meta name="generator" content="Antora 3.2.3">
     <link rel="stylesheet" href="./_/css/site.css">
   </head>
   <body class="article">
@@ -198,6 +198,40 @@
 </div>
 </div>
 <div class="sect1">
+<h2 id="3-1-0"><a class="anchor" href="#3-1-0"></a>3.1.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="changed"><a class="anchor" href="#changed"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Breaking change: <code>OnlineLoess.addPoint</code> returns <code>AddPointResult</code> with <code>OnlinePointStatus</code> (<code>FILLING</code> / <code>READY</code> / <code>DROPPED</code>) instead of a bare <code>Optional&lt;PointResult&gt;</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fixed"><a class="anchor" href="#fixed"></a>Fixed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Distinguishing Online <code>addPoint</code> filling vs <code>missing="drop"</code> via <code>OnlinePointStatus</code> / <code>AddPointResult</code>.</p>
+</li>
+<li>
+<p>Extend/Zero boundary pads use unit spacing when leading/trailing predictor ties would otherwise stack pads.</p>
+</li>
+<li>
+<p>Closing retained <code>PredictModel</code> handles through <code>Result</code> (<code>AutoCloseable</code>) with take-once ownership and a <code>Cleaner</code> safety net on native-owning types.</p>
+</li>
+<li>
+<p>Validating flattened <code>x</code> length (<code>y.length * dimensions</code>) and <code>customWeights</code> against <code>y</code> before JNI.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="3-0-0"><a class="anchor" href="#3-0-0"></a>3.0.0</h2>
 <div class="sectionbody">
 <div class="sect2">
@@ -235,7 +269,7 @@
 </div>
 </div>
 <div class="sect2">
-<h3 id="changed"><a class="anchor" href="#changed"></a>Changed</h3>
+<h3 id="changed-2"><a class="anchor" href="#changed-2"></a>Changed</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -251,7 +285,7 @@
 </div>
 </div>
 <div class="sect2">
-<h3 id="fixed"><a class="anchor" href="#fixed"></a>Fixed</h3>
+<h3 id="fixed-2"><a class="anchor" href="#fixed-2"></a>Fixed</h3>
 <div class="ulist">
 <ul>
 <li>

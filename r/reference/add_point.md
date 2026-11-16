@@ -36,8 +36,8 @@ add_point(model, x, y, weight = 1, ...)
 
 ## Value
 
-An online result list, or `NULL` if fewer than `min_points` have been
-added.
+A list with `status` (`"filling"`, `"ready"`, or `"dropped"`) and
+`point` (an online-output list when ready; otherwise `NULL`).
 
 ## Examples
 
@@ -45,13 +45,18 @@ added.
 model <- OnlineLoess(fraction = 0.2, window_capacity = 20L, min_points = 2L)
 invisible(add_point(model, 1.0, 0.5))
 add_point(model, 2.0, 0.6)
-#> $y
+#> $status
+#> [1] "ready"
+#> 
+#> $point
+#> $point$y
 #> [1] 0.6
 #> 
-#> $residual
+#> $point$residual
 #> [1] 0
 #> 
-#> $robustness_weight
+#> $point$robustness_weight
 #> [1] 1
+#> 
 #> 
 ```
