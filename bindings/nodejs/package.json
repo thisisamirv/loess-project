@@ -1,6 +1,6 @@
 {
     "name": "fastloess",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "description": "High-performance LOESS smoothing for Node.js",
     "main": "index.js",
     "types": "index.d.ts",
@@ -32,15 +32,15 @@
         ]
     },
     "optionalDependencies": {
-        "fastloess-darwin-arm64": "^3.0.0",
-        "fastloess-darwin-x64": "^3.0.0",
-        "fastloess-linux-arm-gnueabihf": "^3.0.0",
-        "fastloess-linux-arm64-gnu": "^3.0.0",
-        "fastloess-linux-arm64-musl": "^3.0.0",
-        "fastloess-linux-x64-gnu": "^3.0.0",
-        "fastloess-linux-x64-musl": "^3.0.0",
-        "fastloess-win32-arm64-msvc": "^3.0.0",
-        "fastloess-win32-x64-msvc": "^3.0.0"
+        "fastloess-darwin-arm64": "^3.1.0",
+        "fastloess-darwin-x64": "^3.1.0",
+        "fastloess-linux-arm-gnueabihf": "^3.1.0",
+        "fastloess-linux-arm64-gnu": "^3.1.0",
+        "fastloess-linux-arm64-musl": "^3.1.0",
+        "fastloess-linux-x64-gnu": "^3.1.0",
+        "fastloess-linux-x64-musl": "^3.1.0",
+        "fastloess-win32-arm64-msvc": "^3.1.0",
+        "fastloess-win32-x64-msvc": "^3.1.0"
     },
     "devDependencies": {
         "@astrojs/markdown-remark": "^7.3.9",
@@ -57,5 +57,9 @@
     "engines": {
         "node": ">= 20"
     },
-    "license": "MIT OR Apache-2.0"
+    "license": "MIT OR Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/thisisamirv/loess-project.git"
+    }
 }

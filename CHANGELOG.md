@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 3.1.0
 
 ### Changed
 
@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Breaking change: `OnlineLoess.add_point` returns `AddPointResult` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | None`.
+- Breaking change: minimum supported Python is now 3.9 (`abi3-py39` / `requires-python = ">=3.9"`), matching PyO3 0.30.
 - Bumped `pyo3` and `numpy` to v0.30.
 
 **R:**
@@ -82,6 +83,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep slice inputs alive across cgo calls, `defer` native result frees, and make `Close`/finalizer races safe with an atomic pointer swap.
 - Distinguish online `missing="drop"` (`AddPointDropped` / `has_value = -1`) from a still-filling window (`AddPointFilling` / `has_value = 0`); `AddPoint` and related methods now return `AddPointStatus`.
 - Reject negative Streaming/Online `iterations` instead of casting them to a huge `usize`.
+- Dropped the unused `libc` Rust dependency from the Go binding crate.
+- Keep `bindings/go/go.work` on Go 1.23 so CI's 1.23 matrix job can use the workspace (docs-site remains on 1.25 outside the workspace).
 
 **Java:**
 

@@ -26,7 +26,7 @@ class FastloessCpp(CargoPackage):
     C-compatible API."""
 
     homepage = "https://thisisamirv.github.io/loess-project/cpp/"
-    url = "https://github.com/thisisamirv/loess-project/archive/refs/tags/v2.0.0.tar.gz"
+    url = "https://github.com/thisisamirv/loess-project/archive/refs/tags/v3.1.0.tar.gz"
     git = "https://github.com/thisisamirv/loess-project.git"
 
     test_requires_compiler = True

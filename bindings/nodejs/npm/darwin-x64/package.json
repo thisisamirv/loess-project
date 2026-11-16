@@ -1,6 +1,6 @@
 {
     "name": "fastloess-darwin-x64",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "os": [
         "darwin"
     ],
@@ -14,5 +14,9 @@
     "license": "MIT OR Apache-2.0",
     "engines": {
         "node": ">= 20"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/thisisamirv/loess-project.git"
     }
 }

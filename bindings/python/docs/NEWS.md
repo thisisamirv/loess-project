@@ -3,11 +3,12 @@
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md).
 
-## [Unreleased]
+## 3.1.0
 
 ### Changed
 
 * Breaking change: `OnlineLoess.add_point` returns `AddPointResult` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | None`.
+* Breaking change: minimum supported Python is now 3.9 (`requires-python = ">=3.9"`).
 
 ### Fixed
 

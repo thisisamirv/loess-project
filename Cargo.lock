@@ -252,7 +252,7 @@ dependencies = [
 
 [[package]]
 name = "fastLoess"
-version = "3.0.0"
+version = "3.1.0"
 dependencies = [
  "approx",
  "loess-rs",
@@ -263,7 +263,7 @@ dependencies = [
 
 [[package]]
 name = "fastLoess-py"
-version = "3.0.0"
+version = "3.1.0"
 dependencies = [
  "fastLoess",
  "numpy",
@@ -280,16 +280,15 @@ dependencies = [
 
 [[package]]
 name = "fastloess-go"
-version = "3.0.0"
+version = "3.1.0"
 dependencies = [
  "cbindgen",
  "fastLoess",
- "libc",
 ]
 
 [[package]]
 name = "fastloess-java"
-version = "3.0.0"
+version = "3.1.0"
 dependencies = [
  "fastLoess",
  "jni",
@@ -297,14 +296,14 @@ dependencies = [
 
 [[package]]
 name = "fastloess-jl"
-version = "3.0.0"
+version = "3.1.0"
 dependencies = [
  "fastLoess",
 ]
 
 [[package]]
 name = "fastloess-node"
-version = "3.0.0"
+version = "3.1.0"
 dependencies = [
  "fastLoess",
  "napi",
@@ -314,7 +313,7 @@ dependencies = [
 
 [[package]]
 name = "fastloess-wasm"
-version = "3.0.0"
+version = "3.1.0"
 dependencies = [
  "console_error_panic_hook",
  "fastLoess",
@@ -602,7 +601,7 @@ checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 
 [[package]]
 name = "loess-rs"
-version = "3.0.0"
+version = "3.1.0"
 dependencies = [
  "approx",
  "nalgebra",

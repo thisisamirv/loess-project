@@ -1,6 +1,6 @@
 {
     "name": "fastloess-linux-x64-gnu",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "os": [
         "linux"
     ],
@@ -17,5 +17,9 @@
     },
     "libc": [
         "glibc"
-    ]
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/thisisamirv/loess-project.git"
+    }
 }
