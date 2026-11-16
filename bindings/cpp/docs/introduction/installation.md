@@ -156,27 +156,6 @@ spack test run --alias fastloess-cpp-smoke fastloess-cpp
 spack test results -l fastloess-cpp-smoke
 ```
 
-## From vcpkg (Repository Overlay)
-
-The repository provides a `fastloess` overlay port for the published v2.0.0 CPU shared library. It is not yet part of vcpkg's curated registry. Rust and Cargo are not required for installation.
-
-From the repository root, with `VCPKG_ROOT` pointing to an existing vcpkg checkout:
-
-```powershell
-& "$env:VCPKG_ROOT/vcpkg.exe" install fastloess:x64-windows --overlay-ports=bindings/cpp/vcpkg
-```
-
-Windows x64/ARM64 MSVC, glibc Linux x64/ARM64, and macOS x64/ARM64 dynamic targets are supported. Use dynamic triplets such as `x64-linux-dynamic` or `arm64-osx-dynamic` on Unix; default static triplets and musl are unsupported by this port. Debug and Release consumers use the same prebuilt Release library; Windows requires the dynamic CRT.
-
-Configure your application with vcpkg's CMake toolchain and the same triplet, then link the installed target:
-
-```cmake
-find_package(fastloess CONFIG REQUIRED)
-target_link_libraries(myapp PRIVATE fastloess::fastloess)
-```
-
-The overlay README under `bindings/cpp/vcpkg` contains installation, consumer validation, and clangd configuration commands. The v2.0.0 port discloses its dependency-license provenance limitation; future releases must install the matching generated notices before that limitation can be resolved.
-
 ---
 
 ## Verify Installation
@@ -230,6 +209,6 @@ int main() {
 ```
 
 ```output
-Header version: 3.0.0
-Loaded library version: 3.0.0
+Header version: 3.1.0
+Loaded library version: 3.1.0
 ```

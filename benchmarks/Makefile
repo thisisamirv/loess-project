@@ -93,6 +93,13 @@ build:
 	@rm -f  $(R_DIR)/src/vendor/fastLoess/Cargo.lock $(R_DIR)/src/vendor/loess-rs/Cargo.lock
 	@rm -f  $(R_DIR)/src/vendor/fastLoess/README.md  $(R_DIR)/src/vendor/fastLoess/CHANGELOG.md
 	@rm -f  $(R_DIR)/src/vendor/loess-rs/README.md   $(R_DIR)/src/vendor/loess-rs/CHANGELOG.md
+	@# Path-dep crates are outside the monorepo workspace; pin rust-version explicitly.
+	@RUST_VERSION=$$(sed -n 's/^rust-version = "\(.*\)"/\1/p' $(R_DIR)/src/Cargo.toml | head -n1); \
+	 if [ -z "$$RUST_VERSION" ]; then echo "Could not read rust-version from Cargo.toml" >&2; exit 1; fi; \
+	 for crate in $(R_DIR)/src/vendor/fastLoess $(R_DIR)/src/vendor/loess-rs; do \
+		sed -i.bak -e "s/^rust-version\\.workspace = true/rust-version = \"$$RUST_VERSION\"/" "$$crate/Cargo.toml"; \
+		rm -f "$$crate/Cargo.toml.bak"; \
+	 done
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/loess-rs/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLoess/.cargo-checksum.json
 	@# Remove version from the loess-rs path dep in fastLoess

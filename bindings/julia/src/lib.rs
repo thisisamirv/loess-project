@@ -422,11 +422,11 @@ pub unsafe extern "C" fn jl_loess_new(
 
         let wmw_slice = shared_parse::option_slice_from_ptr(
             weighted_metric_weights,
-            weighted_metric_weights_len as usize,
+            weighted_metric_weights_len,
         );
 
         let cv_fractions_slice =
-            shared_parse::option_slice_from_ptr(cv_fractions, cv_fractions_len as usize);
+            shared_parse::option_slice_from_ptr(cv_fractions, cv_fractions_len);
 
         let configured_dimensions = dimensions.max(1) as usize;
 
@@ -709,7 +709,7 @@ pub unsafe extern "C" fn jl_predict(
         if new_x.is_null() || new_x_len == 0 {
             return predict_error_result(shared_parse::INVALID_DATA_INPUTS);
         }
-        let new_x_slice = unsafe { from_raw_parts(new_x, new_x_len as usize) };
+        let new_x_slice = unsafe { from_raw_parts(new_x, new_x_len) };
         let extrapolation_str = (!extrapolation.is_null())
             .then_some(unsafe { shared_parse::parse_c_str_or_default(extrapolation, "clamp") });
 
@@ -972,7 +972,7 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
 
         let weighted_metric = shared_parse::option_slice_from_ptr(
             weighted_metric_weights,
-            weighted_metric_weights_len as usize,
+            weighted_metric_weights_len,
         );
         let configured_dimensions = dimensions.max(1) as usize;
 
@@ -1070,9 +1070,9 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
         }
 
         // For multi-dimensional chunks, x has n * dimensions elements (row-major flat).
-        let x_n = n as usize * processor.dimensions.max(1);
+        let x_n = n * processor.dimensions.max(1);
         let x_slice = unsafe { from_raw_parts(x, x_n) };
-        let y_slice = unsafe { from_raw_parts(y, n as usize) };
+        let y_slice = unsafe { from_raw_parts(y, n) };
 
         match map_runtime_result(processor.inner.process_chunk(x_slice, y_slice)) {
             Ok(r) => loess_result_to_jl(r),
@@ -1109,7 +1109,6 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk_weighted(
             return error_result(shared_parse::ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO);
         }
         let processor = unsafe { &mut *ptr };
-        let n = n as usize;
         let x_n = n * processor.dimensions.max(1);
         let x_slice = unsafe { from_raw_parts(x, x_n) };
         let y_slice = unsafe { from_raw_parts(y, n) };
@@ -1270,7 +1269,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
 
         let weighted_metric = shared_parse::option_slice_from_ptr(
             weighted_metric_weights,
-            weighted_metric_weights_len as usize,
+            weighted_metric_weights_len,
         );
         let configured_dimensions = dimensions.max(1) as usize;
 
@@ -1514,7 +1513,7 @@ pub unsafe extern "C" fn jl_online_loess_predict_window(
             return predict_error_result(shared_parse::INVALID_DATA_INPUTS);
         }
         let processor = unsafe { &*ptr };
-        let new_x = unsafe { from_raw_parts(new_x, new_x_n as usize) };
+        let new_x = unsafe { from_raw_parts(new_x, new_x_n) };
         let extrapolation = unsafe { shared_parse::parse_c_str_or_default(extrapolation, "clamp") };
         let mut intervals = IntervalsBuilder::new();
         if !confidence_level.is_nan() {

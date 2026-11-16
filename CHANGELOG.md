@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated `dev/bump_version.py` to set `CITATION.cff`'s release date to the date the script runs.
 - Bumped the pinned `golangci-lint` install-script version from `v2.14.0` to `v2.15.0`.
-- Bumped the Hugo docs build from `v0.167.0` to `v0.168.0`.
+- Bumped the Hugo docs build from `v0.168.0` to `v0.170.0`.
+- Bumped the pinned Checkstyle standalone jar version from `14.3.0` to `14.4.0`.
 
 **Rust:**
 
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restrict the curated vcpkg Linux package to glibc and verify the target libc during CMake configuration; musl users must use an overlay.
 - Breaking change: rename the public C ABI from `cpp_*` to `fastloess_*`.
 - Publish separate Windows MSVC Debug and Release C++ shared libraries for vcpkg; replace `VCPKG_POLICY_ONLY_RELEASE_CRT` with `VCPKG_POLICY_SKIP_CRT_LINKAGE_CHECK` (Rust MSVC stdlib is always `/MD`).
+- Dropped the unused `libc` Rust dependency from the C++ binding crate.
 - Bump the C++ binding package version to 3.1.0.
 
 **Java:**

@@ -331,7 +331,7 @@ function predict(
             extrapolation,
             (max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance),
             (max_neighbor_distance === nothing ? NaN : max_neighbor_distance),
-        ),
+        )
     )
 
     try
@@ -610,12 +610,7 @@ function convert_result(c_result::CJlLoessResult)
             predict_model,
         )
     finally
-        ccall(
-            (:jl_loess_free_result, libfastloess),
-            Cvoid,
-            (Ptr{CJlLoessResult},),
-            r,
-        )
+        ccall((:jl_loess_free_result, libfastloess), Cvoid, (Ptr{CJlLoessResult},), r)
     end
 end
 

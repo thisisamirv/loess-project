@@ -27,11 +27,7 @@ use crate::primitives::policies::BoundaryPolicy;
 #[inline]
 fn edge_spacing<T: Float>(inner: T, outer: T) -> T {
     let dx = outer - inner;
-    if dx == T::zero() {
-        T::one()
-    } else {
-        dx
-    }
+    if dx == T::zero() { T::one() } else { dx }
 }
 
 impl BoundaryPolicy {

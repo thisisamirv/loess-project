@@ -14,7 +14,7 @@ endif
 
 PYTHON ?= python3
 
-CHECKSTYLE_VERSION := 14.3.0
+CHECKSTYLE_VERSION := 14.4.0
 CHECKSTYLE_JAR := checkstyle-$(CHECKSTYLE_VERSION)-all.jar
 CHECKSTYLE_URL := https://github.com/checkstyle/checkstyle/releases/download/checkstyle-$(CHECKSTYLE_VERSION)/$(CHECKSTYLE_JAR)
 
@@ -41,6 +41,10 @@ default:
 
 dev:
 	@echo "Running $(JAVA_PKG) checks..."
+	@echo "=============================================================================="
+	@echo "0. Updating dependencies..."
+	@echo "=============================================================================="
+	@cargo update -p $(JAVA_PKG)
 	@echo "=============================================================================="
 	@echo "1. Rust formatting & linting..."
 	@echo "=============================================================================="

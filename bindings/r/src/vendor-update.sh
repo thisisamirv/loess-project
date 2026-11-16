@@ -19,6 +19,19 @@ done
 rm -f vendor/fastLoess/README.md vendor/fastLoess/CHANGELOG.md \
 	vendor/loess-rs/README.md vendor/loess-rs/CHANGELOG.md
 
+# Path-dep crates are outside the monorepo workspace; pin rust-version explicitly.
+RUST_VERSION=$(sed -n 's/^rust-version = "\(.*\)"/\1/p' Cargo.toml | head -n1)
+if [ -z "$RUST_VERSION" ]; then
+	echo "Could not read rust-version from Cargo.toml" >&2
+	exit 1
+fi
+for crate in vendor/fastLoess vendor/loess-rs; do
+	sed -i.bak \
+		-e "s/^rust-version\\.workspace = true/rust-version = \"$RUST_VERSION\"/" \
+		"$crate/Cargo.toml"
+	rm -f "$crate/Cargo.toml.bak"
+done
+
 # Patch vendored fastLoess: remove version pin on loess-rs path dep
 sed -i.bak \
 	-e 's|loess-rs = { path = "\.\./loess-rs", version = "[^"]*", |loess-rs = { path = "../loess-rs", |' \
@@ -34,9 +47,11 @@ printf '{"files":{},"package":null}' >vendor/fastLoess/.cargo-checksum.json
 # Restoring from a backup (rather than sed-deleting the appended lines)
 # avoids leaving stray blank lines behind on every run.
 cp Cargo.toml Cargo.toml.orig
+trap 'mv -f Cargo.toml.orig Cargo.toml 2>/dev/null || true' EXIT
 printf '\n\n[patch.crates-io]\nloess-rs = { path = "vendor/loess-rs" }\n' >>Cargo.toml
 cargo vendor -q --no-delete vendor
 mv Cargo.toml.orig Cargo.toml
+trap - EXIT
 
 # Drop directories that bulk up the archive
 for d in tests benches examples doc docs assets .github .config; do

@@ -16,8 +16,8 @@ use std::result::Result;
 // Export dependencies from loess-rs crate
 use crate::adapters::apply_weighted_metric_weights;
 use loess_rs::PredictOutput;
-use loess_rs::internals::adapters::online::OnlineLoessBuilder;
 pub use loess_rs::internals::adapters::online::AddPointResult;
+use loess_rs::internals::adapters::online::OnlineLoessBuilder;
 use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
 use loess_rs::internals::engine::executor::PredictQuery;
 use loess_rs::internals::evaluation::diagnostics::Diagnostics;

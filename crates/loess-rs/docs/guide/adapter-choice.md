@@ -177,7 +177,7 @@ fn main() -> Result<(), LoessError> {
 
     let mut shown = 0;
     for i in 0..n {
-        if let Some(result) = processor.add_point(&[x[i]], y[i])? {
+        if let Some(result) = processor.add_point(&[x[i]], y[i])?.ready() {
             if shown < 5 {
                 println!("{}", result.y);
                 shown += 1;

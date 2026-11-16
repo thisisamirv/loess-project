@@ -593,9 +593,9 @@ if (
 ) {
   throw new Error(
     'Unsupported WASI flavor "' +
-    __napiWasiFlavor +
-    '". Available flavors: ' +
-    __napiWasiFlavors.join(', '),
+      __napiWasiFlavor +
+      '". Available flavors: ' +
+      __napiWasiFlavors.join(', '),
   )
 }
 const forceWasiError = process.env.NAPI_RS_FORCE_WASI === 'error'
@@ -725,8 +725,8 @@ if (!nativeBinding) {
   if (loadErrors.length > 0) {
     const error = new Error(
       `Cannot find native binding. ` +
-      `npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). ` +
-      'Please try `npm i` again after removing both package-lock.json and node_modules directory.',
+        `npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). ` +
+        'Please try `npm i` again after removing both package-lock.json and node_modules directory.',
     )
     // assign instead of the `new Error(message, { cause })` options form,
     // which Node < 16.9 silently ignores
@@ -840,3 +840,18 @@ module.exports.LoessResult = nativeBinding.LoessResult
 module.exports.OnlineLoess = nativeBinding.OnlineLoess
 module.exports.PredictOutput = nativeBinding.PredictOutput
 module.exports.StreamingLoess = nativeBinding.StreamingLoess
+
+// fastloess Symbol.dispose hooks
+function __fastloessAttachDispose(ctor) {
+  if (!ctor || !ctor.prototype || typeof ctor.prototype.close !== 'function') {
+    return
+  }
+  if (typeof Symbol !== 'undefined' && Symbol.dispose && !ctor.prototype[Symbol.dispose]) {
+    ctor.prototype[Symbol.dispose] = function () {
+      this.close()
+    }
+  }
+}
+__fastloessAttachDispose(module.exports.OnlineLoess)
+__fastloessAttachDispose(module.exports.StreamingLoess)
+__fastloessAttachDispose(module.exports.LoessResult)

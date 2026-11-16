@@ -312,7 +312,9 @@ export class OnlineOutput {
 
 "#;
 
-use ::fastLoess::internals::adapters::online::{AddPointResult as OnlineAddPointResult, ParallelOnlineLoess};
+use ::fastLoess::internals::adapters::online::{
+    AddPointResult as OnlineAddPointResult, ParallelOnlineLoess,
+};
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::LoessBuilder;
 use ::fastLoess::internals::binding_support as shared_parse;

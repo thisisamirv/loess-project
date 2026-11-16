@@ -59,7 +59,6 @@ venv/
 .vscode/
 .clangd
 !bindings/cpp/.clangd
-!bindings/cpp/vcpkg/test-project/.clangd
 .cache/
 compile_commands.json
 *.swp
@@ -133,8 +132,6 @@ Manifest.toml
 # C++
 compile_flags.txt
 *.obj
-bindings/cpp/vcpkg/.internal_note.md
-
 # Stray generated dirs (accidental output under the wrong working directory)
 bindings/*/benchmarks/
 bindings/*/validation/

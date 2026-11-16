@@ -196,7 +196,13 @@ fn test_online_add_point_basic() {
     assert_eq!(processor.window_size(), 0, "Window should start empty");
 
     // First point returns Filling (need min_points)
-    assert!(processor.add_point(&[0.0], 1.0).expect("add_point ok").is_filling(), "First point should return Filling");
+    assert!(
+        processor
+            .add_point(&[0.0], 1.0)
+            .expect("add_point ok")
+            .is_filling(),
+        "First point should return Filling"
+    );
 
     // Second point produces smoothed value
     let output = processor.add_point(&[1.0], 3.0).expect("add_point ok");
@@ -233,7 +239,13 @@ fn test_online_window_eviction() {
 
     // First point - not enough points yet
     assert_eq!(processor.window_size(), 0);
-    assert!(processor.add_point(&[0.0f64], 1.0f64).expect("ok").is_filling(), "First point returns Filling");
+    assert!(
+        processor
+            .add_point(&[0.0f64], 1.0f64)
+            .expect("ok")
+            .is_filling(),
+        "First point returns Filling"
+    );
 
     // Second point - produces smoothed value
     let second = processor.add_point(&[1.0f64], 3.0f64).expect("ok");
@@ -366,7 +378,10 @@ fn test_online_reuse_after_reset() {
     assert_eq!(processor.window_size(), 0, "Window should be empty");
 
     // Reuse after reset: first point returns Filling again
-    assert!(processor.add_point(&[10.0], 21.0).expect("ok").is_filling(), "First point after reset should return Filling");
+    assert!(
+        processor.add_point(&[10.0], 21.0).expect("ok").is_filling(),
+        "First point after reset should return Filling"
+    );
 
     // Second point after reset should produce a smoothed value
     let output = processor.add_point(&[11.0], 23.0).expect("ok");
@@ -543,7 +558,10 @@ fn test_online_duplicate_x_values() {
         .expect("Builder should succeed");
 
     // First point - returns None (needs min_points)
-    assert!(processor.add_point(&[1.0], 1.0).expect("ok").is_filling(), "First point returns Filling");
+    assert!(
+        processor.add_point(&[1.0], 1.0).expect("ok").is_filling(),
+        "First point returns Filling"
+    );
 
     // Second point with same x - should fallback to mean((1+3)/2)=2.0
     let output = processor.add_point(&[1.0], 3.0).expect("ok");
@@ -701,7 +719,11 @@ fn test_update_mode_consistency() {
     let mut full_results: Vec<f64> = Vec::new();
 
     for (x, y) in test_data {
-        if let Some(output) = incremental.add_point(&[x], y).expect("add_point ok").ready() {
+        if let Some(output) = incremental
+            .add_point(&[x], y)
+            .expect("add_point ok")
+            .ready()
+        {
             incremental_results.push(output.y);
         }
         if let Some(output) = full.add_point(&[x], y).expect("add_point ok").ready() {
@@ -1115,7 +1137,11 @@ fn test_online_multivariate_points_validate_dimensions() {
 
     assert!(processor.add_point(&[0.0, 0.0], 0.0).unwrap().is_filling());
     assert!(processor.add_point(&[1.0, 0.0], 1.0).unwrap().is_filling());
-    let output = processor.add_point(&[0.0, 1.0], 2.0).unwrap().ready().unwrap();
+    let output = processor
+        .add_point(&[0.0, 1.0], 2.0)
+        .unwrap()
+        .ready()
+        .unwrap();
     assert_eq!(output.gradient.unwrap().len(), 2);
     assert!(matches!(
         processor.add_point(&[1.0], 3.0),
@@ -1380,7 +1406,10 @@ fn test_online_no_intervals_by_default() {
 
     let mut last = None;
     for i in 0..10 {
-        last = processor.add_point(&[i as f64], 2.0 * i as f64).unwrap().ready();
+        last = processor
+            .add_point(&[i as f64], 2.0 * i as f64)
+            .unwrap()
+            .ready();
     }
     let output = last.unwrap();
     assert!(output.standard_error.is_none());

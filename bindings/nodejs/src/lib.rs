@@ -3,7 +3,9 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
-use ::fastLoess::internals::adapters::online::{AddPointResult as OnlineAddPointResult, ParallelOnlineLoess};
+use ::fastLoess::internals::adapters::online::{
+    AddPointResult as OnlineAddPointResult, ParallelOnlineLoess,
+};
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::LoessBuilder;
 use ::fastLoess::internals::binding_support as shared_parse;
@@ -597,7 +599,9 @@ pub struct AddPointResult {
     /// `"filling"`, `"ready"`, or `"dropped"`.
     pub status: String,
     /// Smoothed output when `status` is `"ready"`; otherwise `null`.
-    pub point: Option<OnlineOutput>,
+    ///
+    /// Uses [`Either`] so a missing point is JS `null` (not `undefined`).
+    pub point: Either<OnlineOutput, Null>,
 }
 
 /// Build a LoessBuilder from Batch options, applying every field.
@@ -1040,7 +1044,7 @@ impl OnlineLoess {
         Ok(match output {
             OnlineAddPointResult::Ready(o) => AddPointResult {
                 status: "ready".to_string(),
-                point: Some(OnlineOutput {
+                point: Either::A(OnlineOutput {
                     y: o.y,
                     standard_error: o.standard_error,
                     residual: o.residual,
@@ -1055,11 +1059,11 @@ impl OnlineLoess {
             },
             OnlineAddPointResult::Dropped => AddPointResult {
                 status: "dropped".to_string(),
-                point: None,
+                point: Either::B(Null),
             },
             OnlineAddPointResult::Filling => AddPointResult {
                 status: "filling".to_string(),
-                point: None,
+                point: Either::B(Null),
             },
         })
     }
@@ -1085,7 +1089,7 @@ impl OnlineLoess {
         Ok(match output {
             OnlineAddPointResult::Ready(o) => AddPointResult {
                 status: "ready".to_string(),
-                point: Some(OnlineOutput {
+                point: Either::A(OnlineOutput {
                     y: o.y,
                     standard_error: o.standard_error,
                     residual: o.residual,
@@ -1100,11 +1104,11 @@ impl OnlineLoess {
             },
             OnlineAddPointResult::Dropped => AddPointResult {
                 status: "dropped".to_string(),
-                point: None,
+                point: Either::B(Null),
             },
             OnlineAddPointResult::Filling => AddPointResult {
                 status: "filling".to_string(),
-                point: None,
+                point: Either::B(Null),
             },
         })
     }

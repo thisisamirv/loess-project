@@ -113,6 +113,26 @@ test_that("plot.LoessResult draws confidence interval lines when present", {
     expect_no_error(plot(result, main = "With CI"))
 })
 
+test_that("close methods release adapters and reject unused arguments", {
+    batch <- Loess(fraction = 0.3, retain_model = TRUE)
+    invisible(fit(batch, 1:10, sin(1:10)))
+    expect_null(close(batch))
+    expect_null(close(batch))
+    expect_error(close(batch, extra = 1), "unused arguments")
+
+    streaming <- StreamingLoess(fraction = 0.5, chunk_size = 10L)
+    invisible(process_chunk(streaming, 1:10, sin(1:10)))
+    expect_null(close(streaming))
+    expect_null(close(streaming))
+    expect_error(close(streaming, extra = 1), "unused arguments")
+
+    online <- OnlineLoess(fraction = 0.5, window_capacity = 20L)
+    invisible(add_point(online, 1.0, 0.5))
+    expect_null(close(online))
+    expect_null(close(online))
+    expect_error(close(online, extra = 1), "unused arguments")
+})
+
 test_that("online methods reject malformed inputs and unused arguments", {
     model <- OnlineLoess(window_capacity = 20L)
     for (value in list(NULL, "bad", 1i, matrix(1))) {

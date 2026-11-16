@@ -107,8 +107,9 @@ fn test_boundary_zero_dx() {
 
     let (px, _, _) = BoundaryPolicyInternal::Extend.apply(&x, &y, 1, 4);
 
-    assert_eq!(px[0], 1.0);
-    assert_eq!(px[1], 1.0);
+    // Tied leading x uses unit edge spacing so pads stay ordered.
+    assert_eq!(px[0], -1.0);
+    assert_eq!(px[1], 0.0);
 }
 
 #[test]

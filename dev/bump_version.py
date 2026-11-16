@@ -5,17 +5,16 @@ Covers: Cargo.toml package versions (Rust crates + all bindings), the internal
 fastLoess/loess-rs path-dependency version requirements (major.minor), each
 binding's own version file (package.json, pyproject-adjacent __version__.py,
 DESCRIPTION, Project.toml (incl. the fastloess_jll compat floor), version.go,
-CMakeLists.txt (including the vcpkg overlay), the generated C++ version header,
-pom.xml, FastLoess.java),
+CMakeLists.txt, the generated C++ version header, pom.xml, FastLoess.java),
 CITATION.cff, and the Spack recipe's example `url`. Also updates the Go module's
 `/vN` major-version suffix (go.mod files, doc snippets, README/docs badges, the
 doc-snippet runner) whenever a major version bump changes it -- see
 https://go.dev/ref/mod#major-version-suffixes.
 
-Does NOT touch: CHANGELOG.md or per-binding NEWS.md/news.adoc content other
-than Unreleased headings and the R development-version heading (write entries
-by hand), or the Spack recipe's `version()`/`sha256` block and the conda-forge feedstock -- those
-require a published release tarball to hash, so release-cpp.yml/release-conda.yml
+Does NOT touch: CHANGELOG.md (write that by hand), NEWS.md/docs-site release-note
+content (maintain those separately; only recognized release headings are bumped),
+or the Spack recipe's `version()`/`sha256` block and the conda-forge feedstock --
+those require a published release tarball to hash, so release-cpp.yml/release-conda.yml
 update them after the fact, not before.
 
 Usage:
@@ -27,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from datetime import date
 from pathlib import Path
@@ -34,6 +34,15 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
+NEWS_UNRELEASED_HEADING_RE = re.compile(
+    r"(?P<prefix>(?:#{1,6}|={1,6})[ \t]+)(?P<open>\\?\[)Unreleased"
+    r"(?P<close>\\?\])(?P<suffix>[ \t]*)",
+    re.IGNORECASE,
+)
+NEWS_DEVELOPMENT_HEADING_RE = re.compile(
+    r"(?P<prefix>#{1,6}[ \t]+)(?P<package>.+?) \(development version\)",
+    re.IGNORECASE,
+)
 
 # Go requires any module tagged v2.0.0+ to end its module path with /vN, or
 # the Go toolchain (and pkg.go.dev) silently ignores those tags and falls
@@ -137,6 +146,84 @@ def _replace_literal_all(
     verb = "Would update" if dry_run else "Updated"
     print(f"  {verb} ({count}x): {rel}")
     return True
+
+
+def update_news_headings(new_version: str, dry_run: bool) -> bool:
+    """Version the current release heading in every NEWS.md and NEWS.adoc.
+
+    Loess NEWS files use bare version headings (``## 3.1.0``), so bracketed
+    ``[Unreleased]`` headings become a bare version on bump.
+    """
+    tracked_files = (
+        subprocess.run(
+            ["git", "ls-files", "-z"],
+            cwd=REPO_ROOT,
+            check=True,
+            stdout=subprocess.PIPE,
+        )
+        .stdout.decode("utf-8")
+        .split("\0")
+    )
+    news_files = [
+        REPO_ROOT / relative_path
+        for relative_path in tracked_files
+        if relative_path
+        and Path(relative_path).name.lower() in {"news.md", "news.adoc"}
+    ]
+
+    all_ok = True
+    for path in sorted(news_files, key=lambda item: item.as_posix().casefold()):
+        with path.open("r", encoding="utf-8", newline="") as stream:
+            lines = stream.readlines()
+
+        updated_lines: list[str] = []
+        matches = 0
+        for line in lines:
+            content = line.rstrip("\r\n")
+            ending = line[len(content) :]
+            match = NEWS_UNRELEASED_HEADING_RE.fullmatch(content)
+            if match is not None:
+                # Drop brackets so new headings match existing ``## X.Y.Z`` style.
+                content = f"{match.group('prefix')}{new_version}{match.group('suffix')}"
+                matches += 1
+            else:
+                match = NEWS_DEVELOPMENT_HEADING_RE.fullmatch(content)
+                if match is not None:
+                    content = (
+                        f"{match.group('prefix')}{match.group('package')} {new_version}"
+                    )
+                    matches += 1
+            updated_lines.append(content + ending)
+
+        rel = path.relative_to(REPO_ROOT)
+        if matches == 0:
+            already_re = re.compile(
+                rf"^(?:#{{1,6}}|={{1,6}})[ \t]+"
+                rf"(?:\\?\[{re.escape(new_version)}\\?\]|"
+                rf"(?:.+?[ \t]+)?{re.escape(new_version)})[ \t]*$"
+            )
+            if any(already_re.fullmatch(line.rstrip("\r\n")) for line in lines):
+                print(f"  Already at {new_version}: {rel}")
+                continue
+            print(
+                f"  WARNING: expected one Unreleased/development heading in {rel}, found 0"
+            )
+            all_ok = False
+            continue
+        if matches != 1:
+            print(
+                f"  WARNING: expected one Unreleased/development heading in {rel}, found {matches}"
+            )
+            all_ok = False
+            continue
+
+        if not dry_run:
+            with path.open("w", encoding="utf-8", newline="") as stream:
+                stream.writelines(updated_lines)
+        verb = "Would update" if dry_run else "Updated"
+        print(f"  {verb} release heading: {rel}")
+
+    return all_ok
 
 
 def _current_go_module_suffix() -> str:
@@ -390,25 +477,6 @@ def build_targets(
             1,
         )
     )
-    targets.append(
-        (
-            "bindings/cpp/vcpkg/fastloess/CMakeLists.txt",
-            re.compile(
-                r"project\(fastloess-vcpkg VERSION \d+\.\d+\.\d+ LANGUAGES CXX\)"
-            ),
-            f"project(fastloess-vcpkg VERSION {new_version} LANGUAGES CXX)",
-            1,
-        )
-    )
-    targets.append(
-        (
-            "bindings/cpp/vcpkg/fastloess/vcpkg.json",
-            re.compile(r'"version": "\d+\.\d+\.\d+"'),
-            f'"version": "{new_version}"',
-            1,
-        )
-    )
-
     cpp_version_header = "bindings/cpp/include/fastloess_version.h"
     version_major, version_minor, version_patch = new_version.split(".")
     for component, value in (
@@ -473,35 +541,6 @@ def build_targets(
         )
     )
 
-    news_heading_pattern = re.compile(
-        r"^(?P<heading>#{1,6}|={2,6})\s+(?:\\)?\[Unreleased(?:\\)?\]$",
-        re.MULTILINE,
-    )
-    news_files = sorted(
-        path
-        for path in REPO_ROOT.rglob("*")
-        if path.is_file() and path.name.casefold() in {"news.md", "news.adoc"}
-    )
-    for path in news_files:
-        if not news_heading_pattern.search(path.read_text(encoding="utf-8")):
-            continue
-        targets.append(
-            (
-                path.relative_to(REPO_ROOT).as_posix(),
-                news_heading_pattern,
-                rf"\g<heading> {new_version}",
-                1,
-            )
-        )
-    targets.append(
-        (
-            "bindings/r/NEWS.md",
-            re.compile(r"^## rfastloess \(development version\)$", re.MULTILINE),
-            f"## rfastloess {new_version}",
-            1,
-        )
-    )
-
     return targets
 
 
@@ -535,7 +574,27 @@ def main() -> int:
         all_ok = all_ok and ok
 
     print()
+    all_ok = update_news_headings(new_version, args.dry_run) and all_ok
+
+    print()
     all_ok = apply_go_module_suffix(major, args.dry_run) and all_ok
+
+    sync_lock = REPO_ROOT / "bindings/nodejs/scripts/sync-optional-lock.js"
+    if sync_lock.exists() and not args.dry_run:
+        print()
+        result = subprocess.run(
+            ["node", str(sync_lock)],
+            cwd=REPO_ROOT,
+            check=False,
+        )
+        if result.returncode != 0:
+            print("  WARNING: sync-optional-lock.js failed", file=sys.stderr)
+            all_ok = False
+        else:
+            print(
+                "  Updated: bindings/nodejs/package-lock.json "
+                "(optional platform packages)"
+            )
 
     print()
     if not all_ok:
@@ -547,7 +606,10 @@ def main() -> int:
 
     print(f"Done{' (dry run)' if args.dry_run else ''}. Next steps:")
     print("  1. Add a new section to CHANGELOG.md for this version.")
-    print("  2. Add or edit entries in the per-binding news files by hand.")
+    print(
+        "  2. Update NEWS release-note content from CHANGELOG.md "
+        "(headings are bumped automatically)."
+    )
     print("  3. Run `make all-dev` to update R's vendor libraries and doc outputs.")
     return 0
 

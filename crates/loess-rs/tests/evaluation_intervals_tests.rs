@@ -176,7 +176,7 @@ fn test_bootstrap_streaming_and_online_match_batch() {
         .unwrap();
     let mut latest = None;
     for (&point, &response) in x.iter().zip(&y) {
-        latest = online.add_point(&[point], response).unwrap();
+        latest = online.add_point(&[point], response).unwrap().ready();
     }
     let latest = latest.unwrap();
     assert_eq!(

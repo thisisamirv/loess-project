@@ -526,15 +526,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         if let Some(ref mut g_out) = grad_out
             && prev_overlap_len > 0
         {
-            let grad = result
-                .gradient
-                .as_ref()
-                .ok_or_else(|| {
-                    LoessError::InvalidInput(
-                        "return_gradient was set but the smoother did not produce gradients"
-                            .into(),
-                    )
-                })?;
+            let grad = result.gradient.as_ref().ok_or_else(|| {
+                LoessError::InvalidInput(
+                    "return_gradient was set but the smoother did not produce gradients".into(),
+                )
+            })?;
             let prev_grad = mem::take(&mut self.overlap_buffer_gradient);
             for i in 0..prev_overlap_len {
                 for d in 0..dimensions {
@@ -641,8 +637,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             if let Some(ref mut g_out) = grad_out {
                 let grad = result.gradient.as_ref().ok_or_else(|| {
                     LoessError::InvalidInput(
-                        "return_gradient was set but the smoother did not produce gradients"
-                            .into(),
+                        "return_gradient was set but the smoother did not produce gradients".into(),
                     )
                 })?;
                 g_out.extend_from_slice(

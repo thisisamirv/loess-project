@@ -382,6 +382,10 @@ add_point.OnlineLoess <- function(model, x, y, weight = 1.0, ...) {
 #'   object.
 #' @param ... Must be empty.
 #' @return \code{NULL}, invisibly.
+#' @examples
+#' model <- Loess(fraction = 0.3, retain_model = TRUE)
+#' invisible(fit(model, 1:10, sin(1:10)))
+#' close(model)
 #' @export
 close.Loess <- function(con, ...) {
     if (...length() > 0L) {

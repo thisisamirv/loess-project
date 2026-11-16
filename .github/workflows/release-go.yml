@@ -175,6 +175,10 @@ jobs:
         working-directory: bindings/go
         run: cargo build --locked --profile release-c --lib ${{ matrix.cargo_target }}
 
+      - name: Strip cgo-disallowed LTO sections
+        shell: bash
+        run: bash bindings/go/scripts/strip-cgo-lto-sections.sh ${{ matrix.target_dir }}/libfastloess_go.a
+
       - name: Test standalone Go consumer
         if: matrix.native_dir != 'linux_arm64_musl'
         shell: bash

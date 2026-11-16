@@ -47,6 +47,10 @@ default:
 dev:
 	@echo "Running $(NODE_PKG) checks..."
 	@echo "=============================================================================="
+	@echo "0. Updating dependencies..."
+	@echo "=============================================================================="
+	@cargo update -p $(NODE_PKG)
+	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(NODE_PKG) -- --check
@@ -57,6 +61,8 @@ dev:
 	@echo "Linting Node.js files..."
 	@cd $(NODE_DIR) && $(NPM) install
 	@cd $(NODE_DIR) && $(NPM) update
+	@# Unpublished platform optionalDeps are dropped by npm update; re-sync from npm/*/package.json.
+	@cd $(NODE_DIR) && $(NODE) scripts/sync-optional-lock.js
 	@cd $(NODE_DIR) && $(NPM) audit || true
 	@cd $(NODE_DIR) && $(NPX) -y depcheck --ignores="fastloess-*,oxlint,typedoc-plugin-pages,typedoc-plugin-markdown,astro:content,katex"
 	@cd $(NODE_DIR) && ($(NPM) outdated | grep -v "fastloess-" || true)

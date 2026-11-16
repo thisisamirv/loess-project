@@ -1021,12 +1021,12 @@ fn test_online_propagates_options() {
         .window_capacity(5);
     let mut online = ob.build().expect("online builder build ok");
 
-    assert_eq!(online.add_point(&[0.0], 1.0).expect("ok"), None);
+    assert!(online.add_point(&[0.0], 1.0).expect("ok").is_filling());
 
     let second = online.add_point(&[1.0], 3.0).expect("ok");
-    assert!(second.is_some());
+    assert!(second.is_ready());
     assert!(
-        second.unwrap().y.is_finite(),
+        second.ready().unwrap().y.is_finite(),
         "Smoothed value should be finite"
     );
     assert!(online.window_size() > 0);

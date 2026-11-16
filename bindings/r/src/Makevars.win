@@ -12,7 +12,7 @@ WHOLE_ARCHIVE_LIBS = -lrfastloess
 else
 WHOLE_ARCHIVE_LIBS = -Wl,--whole-archive -lrfastloess -Wl,--no-whole-archive
 endif
-PKG_LIBS = -L$(LIBDIR) $(WHOLE_ARCHIVE_LIBS) -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols
+PKG_LIBS = -L$(LIBDIR) $(WHOLE_ARCHIVE_LIBS) -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -lsynchronization -Wl,--export-all-symbols
 
 all: clean $(SHLIB)
 

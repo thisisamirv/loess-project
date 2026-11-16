@@ -89,7 +89,7 @@ export declare class OnlineLoess {
   /**
    * Add a point with one coordinate per configured predictor dimension.
    *
-   * Same ternary `{ status, point }` contract as `add_point`.
+   * Same ternary `{ status, point }` contract as [`OnlineLoess::add_point`].
    * Drop detection uses only `x` coordinates and `y` (weight excluded).
    */
   add_point_vector(x: Float64Array, y: number, weight?: number | undefined | null): AddPointResult
@@ -133,12 +133,16 @@ export declare class StreamingLoess {
   close(): void
 }
 
-/** Result of `OnlineLoess.add_point` / `add_point_vector`. */
+/** Result of [`OnlineLoess::add_point`] / [`OnlineLoess::add_point_vector`]. */
 export interface AddPointResult {
   /** `"filling"`, `"ready"`, or `"dropped"`. */
   status: 'filling' | 'ready' | 'dropped'
-  /** Smoothed output when `status` is `"ready"`; otherwise `null`. */
-  point?: OnlineOutput
+  /**
+   * Smoothed output when `status` is `"ready"`; otherwise `null`.
+   *
+   * Uses [`Either`] so a missing point is JS `null` (not `undefined`).
+   */
+  point: OnlineOutput | null
 }
 
 export interface CvOptions {
