@@ -6,7 +6,7 @@ var searchData=
   ['aic_3',['aic',['../classfastloess_1_1Diagnostics.html#a0da48ebbd39e22ae02725a1da12f95c1',1,'fastloess::Diagnostics']]],
   ['aicc_4',['aicc',['../classfastloess_1_1Diagnostics.html#a57fc1ff5389d5c237660d6688442cec9',1,'fastloess::Diagnostics']]],
   ['analysis_5',['Time Series Analysis',['../use_case_time_series.html',1,'use_case']]],
-  ['api_6',['api',['../api.html',1,'API'],['../api_online.html',1,'OnlineLoess API'],['../api_streaming.html',1,'StreamingLoess API']]],
+  ['api_6',['API',['../api.html',1,'API'],['../api_online.html',1,'OnlineLoess API'],['../api_streaming.html',1,'StreamingLoess API']]],
   ['api_2donline_2emd_7',['api-online.md',['../api-online_8md.html',1,'']]],
   ['api_2dstreaming_2emd_8',['api-streaming.md',['../api-streaming_8md.html',1,'']]],
   ['api_2emd_9',['api.md',['../api_8md.html',1,'']]],
