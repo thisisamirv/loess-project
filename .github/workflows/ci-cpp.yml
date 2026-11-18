@@ -211,9 +211,26 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
-      - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
+      - name: Configure MSVC x64 environment
+        shell: pwsh
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if ($LASTEXITCODE -ne 0 -or -not $vs) { throw "Visual Studio with x64 C++ tools not found" }
+          $devcmd = Join-Path $vs "Common7\Tools\VsDevCmd.bat"
+          if (-not (Test-Path -LiteralPath $devcmd)) { throw "Visual Studio developer script not found: $devcmd" }
+          $current = @{}
+          Get-ChildItem Env: | ForEach-Object { $current[$_.Name] = $_.Value }
+          $configured = & $env:ComSpec /d /s /c "`"$devcmd`" -no_logo -arch=x64 -host_arch=x64 && set"
+          if ($LASTEXITCODE -ne 0) { throw "Visual Studio environment setup failed" }
+          foreach ($line in $configured) {
+            if ($line -match '^([^=]+)=(.*)$') {
+              $name, $value = $Matches[1], $Matches[2]
+              if (-not $current.ContainsKey($name) -or $current[$name] -cne $value) {
+                "$name=$value" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+              }
+            }
+          }
       - name: Pin Rust MSVC linker
         shell: pwsh
         run: |
